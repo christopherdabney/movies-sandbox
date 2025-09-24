@@ -25,7 +25,6 @@ function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login submitted:', formData);
     try {
       await dispatch(loginRecord({
         email: formData.email,
@@ -33,7 +32,6 @@ function Login() {
       })).unwrap()
       navigate('/home', { replace: true })
     } catch (err) {
-      console.log('error')
     }
   }
 

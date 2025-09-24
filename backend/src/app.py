@@ -1,6 +1,8 @@
 import bcrypt
 import db
+import jwt
 
+from datetime import datetime, timedelta
 from db import DuplicateError
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -8,7 +10,8 @@ from flask_cors import CORS
 app = Flask(__name__)
 
 # Allow requests from React dev server
-CORS(app, origins=['http://localhost:5173'])
+CORS(app, origins=['http://localhost:5173'], supports_credentials=True)
+SECRET_KEY = "my-super-secret-jwt-key-for-development-only"
 
 @app.route('/member/<int:id>', methods=['GET'])
 def get(id):
@@ -31,11 +34,18 @@ def login():
     is_valid = bcrypt.checkpw(data.get('password').encode('utf-8'), record['password_hash'])
     if not is_valid:
         return jsonify({'error': 'Incorrect Login Info'}), 404
+
+    token = jwt.encode({
+        'member_id': record['id'],
+        'exp': datetime.utcnow() + timedelta(minutes=5)
+    }, SECRET_KEY, algorithm='HS256')
+
     return jsonify({
         'id': record['id'],
         'email': record['email'],
         'firstName': record['first_name'],
         'lastName': record['last_name'],
+        'token': token,
     })
 
 @app.route('/member', methods=['POST'])

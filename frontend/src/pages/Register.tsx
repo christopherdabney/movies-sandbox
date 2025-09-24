@@ -36,7 +36,6 @@ function Register() {
       })).unwrap()
       navigate('/home', { replace: true })
     } catch (err) {
-      console.log('error')
     }
   }
 
