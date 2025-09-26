@@ -8,10 +8,10 @@ from flask import request, jsonify
 SECRET_KEY = "my-super-secret-jwt-key-for-development-only"
 
 def hash_password(password):
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 def check_password(password, password_hash):
-    return bcrypt.checkpw(password.encode('utf-8'), password_hash)
+    return bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8'))
 
 def add_token(response, member_id, secure=False):
     token = jwt.encode({

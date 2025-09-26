@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { loginRecord } from '../store/accountSlice'
+import { loginRecord, clearError } from '../store/accountSlice'
 import type { AppDispatch, RootState } from '../store/store'
 
 import './Login.css'
@@ -14,6 +14,10 @@ function Login() {
     email: '',
     password: '',
   })
+
+  useEffect(() => {
+      dispatch(clearError());
+  }, [dispatch]);
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

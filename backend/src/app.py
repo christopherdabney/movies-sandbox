@@ -56,15 +56,16 @@ def register():
     # Are datatypes reasonable?
     # Any extreme values to be concerned about?
     try:
-        result = db.insert(
+        record_id = db.insert(
             data.get('email'),
             hash_password(data.get('password')),
             data.get('firstName'),
             data.get('lastName'),
         )
-        # Update the response object with an auth token as well as 
-        # the account data
-        return jsonify({'message': 'Member registered'}), 201
+        return add_token(
+            make_response(jsonify({'message': 'Member registered'})), 
+            record_id
+        )
     except DuplicateError as e:
         return jsonify({'error': str(e)}), 409
 

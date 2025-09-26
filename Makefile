@@ -1,5 +1,4 @@
 # Cyngn Interview Prep - Full Stack Makefile
-
 # Default target - complete setup
 default: build-backend build-frontend
 	@echo ""
@@ -10,9 +9,23 @@ default: build-backend build-frontend
 	@echo "  Terminal 2: make react"
 	@echo ""
 
-populate: backend/member.db
-	sqlite3 backend/member.db "DELETE FROM member;"
-	sqlite3 backend/member.db < backend/populate.sql
+# PostgreSQL database setup
+db-setup:
+	@echo "Setting up PostgreSQL database..."
+	@createdb pagine_dev || echo "Database 'pagine_dev' already exists"
+	@cd backend && source venv/bin/activate && python src/db.py
+	@echo "Database setup complete"
+
+db-reset:
+	@echo "Resetting PostgreSQL database..."
+	@dropdb pagine_dev || echo "Database 'pagine_dev' doesn't exist"
+	@createdb pagine_dev
+	@cd backend && source venv/bin/activate && python src/db.py
+	@echo "Database reset complete"
+
+populate:
+	@echo "PostgreSQL populate not implemented yet (was SQLite-specific)"
+	@echo "Use your frontend registration form to add test users"
 
 # Build backend with dependency checking and error handling
 build-backend:
@@ -25,7 +38,7 @@ build-backend:
 	@cd backend && source venv/bin/activate && pip install -r requirements.txt > /tmp/pip-install.log 2>&1 && \
 		echo "Python dependencies installed" || \
 		(echo "Python dependency installation failed. Check /tmp/pip-install.log for details" && cat /tmp/pip-install.log | tail -10 && exit 1)
-	@cd backend && sqlite3 member.db < schema.sql
+	@make db-setup
 	@echo "Backend setup complete"
 
 # Build frontend with dependency checking and error handling
@@ -62,12 +75,18 @@ test-backend:
 test: test-backend
 	@echo "Backend tests complete. Frontend tests not configured yet."
 
-# Database tools
+# Database tools (PostgreSQL)
 db-view:
-	cd backend && sqlite3 -header -column member.db "SELECT * FROM member;"
+	@echo "Viewing all users in PostgreSQL database:"
+	@psql pagine_dev -c "SELECT id, email, first_name, last_name, created_at FROM member ORDER BY created_at DESC;"
 
 db-shell:
-	cd backend && sqlite3 member.db
+	@echo "Opening PostgreSQL shell for 'pagine_dev' database:"
+	@psql pagine_dev
+
+db-test:
+	@echo "Testing database connection..."
+	@cd backend && source venv/bin/activate && python src/db.py
 
 # Cleanup
 clean:
@@ -78,7 +97,8 @@ clean:
 	@echo "Clean complete"
 
 clean-db:
-	rm -f backend/member.db
+	@echo "Dropping PostgreSQL database..."
+	@dropdb pagine_dev
 
 full-clean: clean clean-db
 	@echo "Full clean complete"
@@ -106,10 +126,13 @@ help:
 	@echo "  run             - Start Flask backend server"
 	@echo "  react           - Start React frontend server"
 	@echo "  test            - Run backend tests"
+	@echo "  db-setup        - Create and initialize PostgreSQL database"
+	@echo "  db-reset        - Drop and recreate PostgreSQL database"
 	@echo "  db-view         - View all database records"
-	@echo "  db-shell        - Open interactive database shell"
+	@echo "  db-shell        - Open interactive PostgreSQL shell"
+	@echo "  db-test         - Test database connection"
 	@echo "  clean           - Remove venv and node_modules"
-	@echo "  clean-db        - Delete database file"
+	@echo "  clean-db        - Drop PostgreSQL database"
 	@echo "  full-clean      - Remove everything (venv, node_modules, database)"
 	@echo "  show-logs       - View detailed installation logs"
 	@echo "  backend-shell   - Open shell with Python venv activated"
