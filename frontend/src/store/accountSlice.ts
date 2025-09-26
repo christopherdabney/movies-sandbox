@@ -21,19 +21,19 @@ const initialState: RegistrationState = {
   error: null,
 }
 
-export const registerRecord = createAsyncThunk(
-  'member/register',
+export const accountRecord = createAsyncThunk(
+  'member/account',
   async (data: Omit<RegistrationRecord, 'id' | 'createdAt'>) => {
-    const response = await fetch('http://localhost:5000/member', {
-      method: 'POST',
+    const response = await fetch('http://localhost:5000/member/account', {
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),
+      credentials: 'include',
     })
 
     if (!response.ok) {
-      throw new Error('Failed to create usage record')
+      throw new Error('Failed to get account data')
     }
 
     return await response.json()
@@ -49,6 +49,7 @@ export const loginRecord = createAsyncThunk(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
+      credentials: 'include',
     })
 
     if (!response.ok) {
@@ -59,6 +60,42 @@ export const loginRecord = createAsyncThunk(
       } catch {
       }
       throw new Error(errorMessage)
+    }
+
+    return await response.json()
+  }
+)
+
+export const logoutRecord = createAsyncThunk(
+  'member/logout',
+  async () => {
+    const response = await fetch('http://localhost:5000/member/logout', {
+      method: 'POST',
+      credentials: 'include',
+    })
+    
+    if (!response.ok) {
+      throw new Error('Failed to logout')
+    }
+    
+    return await response.json()
+  }
+)
+
+export const registerRecord = createAsyncThunk(
+  'member/register',
+  async (data: Omit<RegistrationRecord, 'id' | 'createdAt'>) => {
+    const response = await fetch('http://localhost:5000/member', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to register user')
     }
 
     return await response.json()
@@ -81,11 +118,11 @@ const accountSlice = createSlice({
       })
       .addCase(registerRecord.fulfilled, (state, action) => {
         state.loading = false
-        state.account = action.payload
+        state.error = null
       })
       .addCase(registerRecord.rejected, (state, action) => {
         state.loading = false
-        state.error = action.error.message || 'Failed to register account'
+        state.error = action.error.message || 'Failed to register'
       })
       .addCase(loginRecord.pending, (state) => {
         state.loading = true
@@ -93,11 +130,36 @@ const accountSlice = createSlice({
       })
       .addCase(loginRecord.fulfilled, (state, action) => {
         state.loading = false
-        state.account = action.payload
+        state.error = null
       })
       .addCase(loginRecord.rejected, (state, action) => {
         state.loading = false
         state.error = action.error.message || 'Failed to log in'
+      })
+      .addCase(accountRecord.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(accountRecord.fulfilled, (state, action) => {
+        state.loading = false
+        state.account = action.payload
+      })
+      .addCase(accountRecord.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.error.message || 'Failed to get account'
+      })
+      .addCase(logoutRecord.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(logoutRecord.fulfilled, (state) => {
+        state.loading = false
+        state.account = null  // Clear account data
+        state.error = null
+      })
+      .addCase(logoutRecord.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.error.message || 'Failed to log out'
       })
   },
 })

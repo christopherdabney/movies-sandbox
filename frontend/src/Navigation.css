@@ -1,0 +1,19 @@
+/* Navigation.css - only keep the shared styles */
+nav a, .nav-logout-btn {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  padding: 16px 0;
+  font-weight: 500;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  border-bottom: 2px solid transparent;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+nav a:hover, .nav-logout-btn:hover {
+  color: white;
+  border-bottom-color: rgba(255, 255, 255, 0.8);
+}

@@ -49,6 +49,12 @@ def insert(email, password_hash, first_name, last_name):
             """, 
             (email, password_hash, first_name, last_name)
         )
+        """ reference
+        new_id = cursor.lastrowid
+        # Then fetch the complete record
+        cursor.execute("SELECT * FROM member WHERE id = ?", (new_id,))
+        record = cursor.fetchone()
+        """
         conn.commit()
     except sqlite3.IntegrityError:
         raise DuplicateError(DUPLICATE_ERROR)

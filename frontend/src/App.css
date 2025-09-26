@@ -1,0 +1,42 @@
+/* Navigation Styles - Ocean Blue Theme */
+header {
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  padding: 0;
+  box-shadow: 0 4px 12px rgba(30, 60, 114, 0.3);
+}
+
+nav {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  gap: 30px;
+}
+
+nav a, .nav-logout-btn {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  padding: 16px 0;
+  font-weight: 500;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  border-bottom: 2px solid transparent;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+nav a:hover, .nav-logout-btn:hover {
+  color: white;
+  border-bottom-color: rgba(255, 255, 255, 0.8);
+}
+
+nav a:active {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Adjust main content to account for header */
+main {
+  min-height: calc(100vh - 60px);
+}

@@ -1,17 +1,26 @@
 import { useEffect } from 'react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
+import { accountRecord } from '../store/accountSlice'
+import type { AppDispatch, RootState } from '../store/store'
 import './Home.css'
 
 function Home() {
+  const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate();
-  const { account } = useSelector((state: RootState) => state.account)
+  const { account, error, loading } = useSelector((state: RootState) => state.account)
 
   useEffect(() => {
-    if (!account) {
-        navigate('/login', { replace: true })
+    const loadAccount = async () => {
+      try {
+        await dispatch(accountRecord()).unwrap()
+      } catch (error) {
+        navigate('/login')
+      }
     }
-  }, [account,]);
+    
+    loadAccount()
+  }, [dispatch, navigate])
 
   if (!account) {
     return null;
