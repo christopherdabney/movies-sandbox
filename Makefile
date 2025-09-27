@@ -23,9 +23,14 @@ db-reset:
 	@cd backend && source venv/bin/activate && python src/db.py
 	@echo "Database reset complete"
 
+# Add this to your Makefile
 populate:
-	@echo "PostgreSQL populate not implemented yet (was SQLite-specific)"
-	@echo "Use your frontend registration form to add test users"
+	@echo "Loading movie datasets..."
+	@for file in backend/movies/*.sql; do \
+		echo "Loading $$file..."; \
+		psql pagine_dev < "$$file"; \
+	done
+	@echo "Movie data loading complete"
 
 # Build backend with dependency checking and error handling
 build-backend:
@@ -76,9 +81,14 @@ test: test-backend
 	@echo "Backend tests complete. Frontend tests not configured yet."
 
 # Database tools (PostgreSQL)
-db-view:
+db-users:
 	@echo "Viewing all users in PostgreSQL database:"
 	@psql pagine_dev -c "SELECT id, email, first_name, last_name, created_at FROM member ORDER BY created_at DESC;"
+
+# Database tools (PostgreSQL)
+db-movies:
+	@echo "Viewing all movies in PostgreSQL database:"
+	@psql pagine_dev -c "SELECT * FROM movie;"
 
 db-shell:
 	@echo "Opening PostgreSQL shell for 'pagine_dev' database:"

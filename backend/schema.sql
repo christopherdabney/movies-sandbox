@@ -7,3 +7,26 @@ CREATE TABLE IF NOT EXISTS member (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS movie (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    release_year INTEGER,
+    runtime_minutes INTEGER,
+    director VARCHAR(255),
+    genre VARCHAR(100),
+    rating VARCHAR(10),  -- 'PG', 'R', 'PG-13', etc.
+    imdb_rating DECIMAL(3,1),  -- 7.5, 8.2, etc.
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS watchlist (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES member(id) ON DELETE CASCADE,
+    movie_id INTEGER REFERENCES movie(id) ON DELETE CASCADE,
+    status VARCHAR(20) DEFAULT 'queued',  -- 'queued', 'watched'
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    watched_at TIMESTAMP NULL,  -- Set when status changes to 'watched'
+    UNIQUE(user_id, movie_id)
+);

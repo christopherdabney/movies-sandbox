@@ -1,11 +1,10 @@
 import bcrypt
 import jwt
 
+from config import Config
 from datetime import datetime, timedelta
 from functools import wraps
 from flask import request, jsonify
-
-SECRET_KEY = "my-super-secret-jwt-key-for-development-only"
 
 def hash_password(password):
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -17,7 +16,7 @@ def add_token(response, member_id, secure=False):
     token = jwt.encode({
         'member_id': member_id,
         'exp': datetime.utcnow() + timedelta(minutes=5)
-    }, SECRET_KEY, algorithm='HS256')
+    }, Config.SECRET_KEY, algorithm='HS256')
     response.set_cookie(
         'auth_token',           # Cookie name
         token,                  # JWT token value
@@ -50,7 +49,7 @@ def token_required(f):
             return jsonify({'error': 'Token missing'}), 401
             
         try:
-            data = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+            data = jwt.decode(token, Config.SECRET_KEY, algorithms=['HS256'])
             current_member_id = data['member_id']
         except jwt.ExpiredSignatureError:
             return jsonify({'error': 'Token expired'}), 401

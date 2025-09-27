@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import { API_ENDPOINTS } from '../constants/api';
 
 export interface RegistrationRecord {
   id?: number
@@ -24,7 +25,7 @@ const initialState: RegistrationState = {
 export const accountRecord = createAsyncThunk(
   'member/account',
   async (data: Omit<RegistrationRecord, 'id' | 'createdAt'>) => {
-    const response = await fetch('http://localhost:5000/member/account', {
+    const response = await fetch(API_ENDPOINTS.MEMBER.ACCOUNT, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -43,7 +44,7 @@ export const accountRecord = createAsyncThunk(
 export const loginRecord = createAsyncThunk(
   'member/login',
   async (data: Omit<RegistrationRecord, 'id' | 'createdAt' | 'firstName' | 'lastName'>) => {
-    const response = await fetch('http://localhost:5000/member/login', {
+    const response = await fetch(API_ENDPOINTS.MEMBER.LOGIN, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -69,7 +70,7 @@ export const loginRecord = createAsyncThunk(
 export const logoutRecord = createAsyncThunk(
   'member/logout',
   async () => {
-    const response = await fetch('http://localhost:5000/member/logout', {
+    const response = await fetch(API_ENDPOINTS.MEMBER.LOGOUT, {
       method: 'POST',
       credentials: 'include',
     })
@@ -85,7 +86,7 @@ export const logoutRecord = createAsyncThunk(
 export const registerRecord = createAsyncThunk(
   'member/register',
   async (data: Omit<RegistrationRecord, 'id' | 'createdAt'>) => {
-    const response = await fetch('http://localhost:5000/member', {
+    const response = await fetch(API_ENDPOINTS.MEMBER.REGISTER, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -1,0 +1,33 @@
+from database import db
+
+class Movie(db.Model):
+    __tablename__ = 'movie'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    director = db.Column(db.String(100))
+    release_year = db.Column(db.Integer)
+    genre = db.Column(db.String(50))
+    description = db.Column(db.Text)
+    runtime_minutes = db.Column(db.Integer)
+    rating = db.Column(db.String(10))  # PG, PG-13, R, etc.
+    imdb_rating = db.Column(db.Numeric(3,1))  # ✅ Add missing column
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    
+    def to_dict(self):
+        """Convert model to dictionary for JSON serialization"""
+        return {
+            'id': self.id,
+            'title': self.title,
+            'director': self.director,
+            'release_year': self.release_year,
+            'genre': self.genre,
+            'description': self.description,
+            'runtime_minutes': self.runtime_minutes,
+            'rating': self.rating,
+            'imdb_rating': float(self.imdb_rating) if self.imdb_rating else None,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+        }
+    
+    def __repr__(self):
+        return f'<Movie {self.title} ({self.release_year})>'
