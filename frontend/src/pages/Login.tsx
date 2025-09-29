@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { loginRecord, clearError } from '../store/accountSlice'
 import type { AppDispatch, RootState } from '../store/store'
 
-import './Login.css'
+import './../styles/Login.css'
 
 function Login() {
   const dispatch = useDispatch<AppDispatch>()

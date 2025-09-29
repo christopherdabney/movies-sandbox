@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { accountRecord } from '../store/accountSlice'
 import type { AppDispatch, RootState } from '../store/store'
-import './Home.css'
+import './../styles/Home.css'
 
 function Home() {
   const dispatch = useDispatch<AppDispatch>()

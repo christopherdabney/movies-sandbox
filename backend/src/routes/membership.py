@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify, make_response
 from sqlalchemy.exc import IntegrityError
 from auth import token_required, add_token, remove_token, hash_password, check_password
-from models import Member
 from database import db
+from models import Member
 
 membership_bp = Blueprint('membership', __name__, url_prefix='/member')
 

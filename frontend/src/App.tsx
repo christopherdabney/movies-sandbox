@@ -3,8 +3,9 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Register from './pages/Register.tsx'
 import Login from './pages/Login.tsx'
 import Home from './pages/Home.tsx'
+import Movies from './pages/Movies.tsx'
 import Navigation from './Navigation.tsx'
-import './App.css'
+import './styles/App.css'
 
 function App() {
   return (
@@ -14,7 +15,7 @@ function App() {
       </header>
       <main>
         <Routes>
-          <Route path="/" element={<div>Root page</div>} />
+          <Route path="movies" element={<Movies />} />
           <Route path="register" element={<Register />} />
           <Route path="login" element={<Login />} />
           <Route path="home" element={

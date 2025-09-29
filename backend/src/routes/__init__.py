@@ -1,2 +1,2 @@
 from .membership import membership_bp
-from .movie import movie_bp
+from .movies import movies_bp

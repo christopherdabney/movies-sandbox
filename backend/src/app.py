@@ -1,22 +1,20 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
 
-from database import init_db
-from routes import membership_bp, movie_bp
 from config import Config
+from database import init_db
+from routes import membership_bp, movies_bp
 
 app = Flask(__name__)
 app.config.from_object(Config)
 
-# Initialize database
 init_db(app)
 
 # Allow requests from React dev server
 CORS(app, origins=Config.CORS_ORIGINS, supports_credentials=True)
 
-# Register blueprints
 app.register_blueprint(membership_bp)
-app.register_blueprint(movie_bp)
+app.register_blueprint(movies_bp)
 
 # Import models for Flask-Migrate (safe now - no circular imports)
 from models import Member, Movie

@@ -3,8 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { registerRecord, clearError } from '../store/accountSlice'
 import type { AppDispatch, RootState } from '../store/store'
-
-import './Register.css'
+import './../styles/Register.css'
 
 function Register() {
   const dispatch = useDispatch<AppDispatch>()

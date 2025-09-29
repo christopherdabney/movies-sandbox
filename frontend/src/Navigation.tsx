@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
 import { logoutRecord } from './store/accountSlice'
 import type { AppDispatch, RootState } from './store/store'
-import './Navigation.css'
+import './styles/Navigation.css'
 
 function Navigation() {
   const dispatch = useDispatch<AppDispatch>()
@@ -17,6 +17,7 @@ function Navigation() {
 
   const loggedInNav = (
     <>
+      <Link to="/movies">Movies</Link>
       <Link to="home">Home</Link>
       <button onClick={handleLogout} className="nav-logout-btn">
         Logout
@@ -25,6 +26,7 @@ function Navigation() {
   )
   const loggedOutNav = (
     <>
+      <Link to="/movies">Movies</Link>
       <Link to="register">Register</Link>
       <Link to="login">Log In</Link>
     </>
