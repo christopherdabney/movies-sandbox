@@ -11,5 +11,11 @@ export const API_ENDPOINTS = {
   MOVIES: {
     LIST: `${API_BASE_URL}/movies`,
     DETAIL: (id) => `${API_BASE_URL}/movies/${id}`,
+  },
+  WATCHLIST: {
+    LIST: `${API_BASE_URL}/watchlist`,
+    ADD: `${API_BASE_URL}/watchlist`,
+    REMOVE: (id) => `${API_BASE_URL}/watchlist/${id}`,
+    UPDATE: (id) => `${API_BASE_URL}/watchlist/${id}`,
   }
 };

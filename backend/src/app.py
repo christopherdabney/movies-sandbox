@@ -3,7 +3,7 @@ from flask_cors import CORS
 
 from config import Config
 from database import init_db
-from routes import membership_bp, movies_bp
+from routes import membership_bp, movies_bp, watchlist_bp
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -15,6 +15,7 @@ CORS(app, origins=Config.CORS_ORIGINS, supports_credentials=True)
 
 app.register_blueprint(membership_bp)
 app.register_blueprint(movies_bp)
+app.register_blueprint(watchlist_bp)
 
 # Import models for Flask-Migrate (safe now - no circular imports)
 from models import Member, Movie

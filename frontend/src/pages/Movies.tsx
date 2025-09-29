@@ -14,6 +14,7 @@ interface Movie {
   rating: string;
   poster_url?: string;
   imdb_rating?: number;
+  inWatchlist?: boolean;
 }
 
 interface MoviesResponse {
@@ -30,7 +31,7 @@ const Movies: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchMovies = async (page: number, limit: number = 16) => {
+  const fetchMovies = async (page: number, limit: number = 24) => {
     setLoading(true);
     setError(null);
     
@@ -48,8 +49,6 @@ const Movies: React.FC = () => {
       }
       
       const data: MoviesResponse = await response.json();
-      console.log('all movies');
-      console.log(data);
       setMoviesData(data);
       setCurrentPage(page);
     } catch (err) {
@@ -72,6 +71,38 @@ const Movies: React.FC = () => {
   const handleNextPage = () => {
     if (moviesData && currentPage < moviesData.total_pages) {
       fetchMovies(currentPage + 1);
+    }
+  };
+
+  const handleAddToWatchlist = async (movieId: number) => {
+    try {
+      const response = await fetch(API_ENDPOINTS.WATCHLIST.ADD, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ movieId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add to watchlist');
+      }
+      // Update the movies array inside moviesData
+      setMoviesData(prevData => {
+        if (!prevData) return prevData;
+        
+        return {
+          ...prevData,
+          movies: prevData.movies.map(movie => 
+            movie.id === movieId 
+              ? { ...movie, inWatchlist: true }
+              : movie
+          )
+        };
+      });
+    } catch (err) {
+      console.error('Error adding to watchlist:', err);
     }
   };
 
@@ -117,7 +148,11 @@ const Movies: React.FC = () => {
       {/* Movie grid */}
       <div className="movies-grid">
         {moviesData.movies.map((movie) => (
-          <MovieTile key={movie.id} movie={movie} />
+          <MovieTile
+            key={movie.id}
+            movie={movie}
+            onAddToWatchlist={handleAddToWatchlist}
+          />
         ))}
       </div>
 

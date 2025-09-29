@@ -1,4 +1,3 @@
-// MovieTile.tsx
 import React from 'react';
 
 interface Movie {
@@ -18,14 +17,12 @@ interface MovieTileProps {
   movie: Movie;
 }
 
-const MovieTile: React.FC<MovieTileProps> = ({ movie }) => {
+const MovieTile: React.FC<MovieTileProps> = ({ movie, onAddToWatchlist }) => {
   const initials = movie.title.split(' ')
     .map(word => word[0])
     .join('')
     .slice(0, 3)
     .toUpperCase();
-
-  console.log(movie.poster_url);
 
   return (
     <div className="movie-tile">
@@ -42,12 +39,16 @@ const MovieTile: React.FC<MovieTileProps> = ({ movie }) => {
       )}
       <div className="movie-info">
         <h3 className="movie-title">{movie.title}</h3>
-        <p className="movie-details">
-          {movie.genre} ({movie.release_year})
-        </p>
-        <p className="movie-rating">
-          Rating: {movie.imdb_rating ? movie.imdb_rating.toFixed(1) : 'N/A'}
-        </p>
+        <p className="movie-year">{movie.release_year}</p>
+        <p className="movie-genre">{movie.genre}</p>
+        {movie.inWatchlist === false && (
+            <button 
+              className="add-to-watchlist-btn"
+              onClick={() => onAddToWatchlist(movie.id)}
+            >
+              + Add to Watchlist
+            </button>
+          )}
       </div>
     </div>
   );

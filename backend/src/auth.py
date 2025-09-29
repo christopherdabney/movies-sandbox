@@ -50,11 +50,29 @@ def token_required(f):
             
         try:
             data = jwt.decode(token, Config.SECRET_KEY, algorithms=['HS256'])
-            current_member_id = data['member_id']
+            member_id = data['member_id']
         except jwt.ExpiredSignatureError:
             return jsonify({'error': 'Token expired'}), 401
         except jwt.InvalidTokenError:
             return jsonify({'error': 'Invalid token'}), 401
             
-        return f(current_member_id, *args, **kwargs)
+        return f(member_id, *args, **kwargs)
+    return decorated
+
+def token_optional(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.cookies.get('auth_token')
+        member_id = None
+        
+        if token:
+            try:
+                data = jwt.decode(token, Config.SECRET_KEY, algorithms=["HS256"])
+                member_id = data['member_id']
+            except:
+                # Token invalid or expired - just continue with None
+                pass
+        
+        return f(member_id=member_id, *args, **kwargs)
+    
     return decorated
