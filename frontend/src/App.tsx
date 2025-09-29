@@ -4,6 +4,7 @@ import Register from './pages/Register.tsx'
 import Login from './pages/Login.tsx'
 import Home from './pages/Home.tsx'
 import Movies from './pages/Movies.tsx'
+import MyMovies from './pages/MyMovies.tsx'
 import Navigation from './Navigation.tsx'
 import './styles/App.css'
 
@@ -21,6 +22,11 @@ function App() {
           <Route path="home" element={
             <ProtectedRoute>
               <Home />
+            </ProtectedRoute>
+          } />
+          <Route path="/my-movies" element={
+            <ProtectedRoute>
+              <MyMovies />
             </ProtectedRoute>
           } />
         </Routes>

@@ -1,4 +1,5 @@
 import React from 'react';
+import '../styles/Movies.css';
 
 interface Movie {
   id: number;
@@ -15,9 +16,20 @@ interface Movie {
 
 interface MovieTileProps {
   movie: Movie;
+  onAddToWatchlist?: (movieId: number) => void;
+  // Props for My Movies page
+  watchlistStatus?: string;
+  onRemoveFromWatchlist?: (movieId: number) => void;
+  onMarkAsWatched?: (movieId: number) => void;
 }
 
-const MovieTile: React.FC<MovieTileProps> = ({ movie, onAddToWatchlist }) => {
+const MovieTile: React.FC<MovieTileProps> = ({ 
+  movie, 
+  onAddToWatchlist,
+  watchlistStatus,
+  onRemoveFromWatchlist,
+  onMarkAsWatched
+}) => {
   const initials = movie.title.split(' ')
     .map(word => word[0])
     .join('')
@@ -41,14 +53,36 @@ const MovieTile: React.FC<MovieTileProps> = ({ movie, onAddToWatchlist }) => {
         <h3 className="movie-title">{movie.title}</h3>
         <p className="movie-year">{movie.release_year}</p>
         <p className="movie-genre">{movie.genre}</p>
-        {movie.inWatchlist === false && (
+        {
+            movie.inWatchlist === false && onAddToWatchlist && (
             <button 
               className="add-to-watchlist-btn"
               onClick={() => onAddToWatchlist(movie.id)}
             >
               + Add to Watchlist
             </button>
-          )}
+        )}
+        {onRemoveFromWatchlist && onMarkAsWatched && (
+          <div className="watchlist-actions">
+            <button 
+              className="remove-btn"
+              onClick={() => onRemoveFromWatchlist(movie.id)}
+            >
+              Remove
+            </button>
+            {watchlistStatus === 'queued' && (
+              <button 
+                className="mark-watched-btn"
+                onClick={() => onMarkAsWatched(movie.id)}
+              >
+                Mark Watched
+              </button>
+            )}
+            {watchlistStatus === 'watched' && (
+              <span className="watched-badge">✓ Watched</span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

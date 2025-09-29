@@ -20,7 +20,7 @@ def add_token(response, member_id, secure=False):
     response.set_cookie(
         'auth_token',           # Cookie name
         token,                  # JWT token value
-        max_age=5*60,           # 5 minutes in seconds
+        max_age=30*60,           # 5 minutes in seconds
         httponly=True,          # JavaScript can't access it
         secure=secure,            # Only sent over HTTPS (set False for development)
         samesite='Strict',       # CSRF protection

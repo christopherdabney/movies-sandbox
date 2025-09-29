@@ -17,8 +17,9 @@ function Navigation() {
 
   const loggedInNav = (
     <>
-      <Link to="/">Movies</Link>
-      <Link to="home">Home</Link>
+      <Link to="/" className="nav-link">Movies</Link>
+      <Link to="/my-movies" className="nav-link">My Movies</Link>
+      <Link to="/home" className="nav-link">Home</Link>
       <button onClick={handleLogout} className="nav-logout-btn">
         Logout
       </button>
@@ -26,9 +27,9 @@ function Navigation() {
   )
   const loggedOutNav = (
     <>
-      <Link to="/">Movies</Link>
-      <Link to="register">Register</Link>
-      <Link to="login">Log In</Link>
+      <Link to="/" className="nav-link">Movies</Link>
+      <Link to="/register" className="nav-link">Register</Link>
+      <Link to="/login" className="nav-link">Log In</Link>
     </>
   )
 
