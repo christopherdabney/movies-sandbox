@@ -9,6 +9,10 @@ default: build-backend build-frontend
 	@echo "  Terminal 2: make react"
 	@echo ""
 
+posters:
+	@echo "Fetching movie posters from TMDB..."
+	@cd backend && source venv/bin/activate && python scripts/fetch_posters.py
+
 # PostgreSQL database setup
 db-setup:
 	@echo "Setting up PostgreSQL database..."

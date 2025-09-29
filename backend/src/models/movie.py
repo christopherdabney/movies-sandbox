@@ -11,7 +11,8 @@ class Movie(db.Model):
     description = db.Column(db.Text)
     runtime_minutes = db.Column(db.Integer)
     rating = db.Column(db.String(10))  # PG, PG-13, R, etc.
-    imdb_rating = db.Column(db.Numeric(3,1))  # ✅ Add missing column
+    imdb_rating = db.Column(db.Numeric(3,1))
+    poster_url = db.Column(db.String(500))
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     
     def to_dict(self):
@@ -26,6 +27,7 @@ class Movie(db.Model):
             'runtime_minutes': self.runtime_minutes,
             'rating': self.rating,
             'imdb_rating': float(self.imdb_rating) if self.imdb_rating else None,
+            'poster_url': self.poster_url,
             'created_at': self.created_at.isoformat() if self.created_at else None,
         }
     

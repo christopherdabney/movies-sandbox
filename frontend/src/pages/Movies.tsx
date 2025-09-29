@@ -12,7 +12,8 @@ interface Movie {
   description: string;
   runtime_minutes: number;
   rating: string;
-  imdb_id: string;
+  poster_url?: string;
+  imdb_rating?: number;
 }
 
 interface MoviesResponse {
@@ -47,6 +48,8 @@ const Movies: React.FC = () => {
       }
       
       const data: MoviesResponse = await response.json();
+      console.log('all movies');
+      console.log(data);
       setMoviesData(data);
       setCurrentPage(page);
     } catch (err) {
@@ -106,7 +109,6 @@ const Movies: React.FC = () => {
     <div className="movies-container">
       {/* Header with pagination info */}
       <div className="movies-header">
-        <h1 className="movies-title">Classic Movies</h1>
         <div className="movies-count">
           Showing {moviesData.movies.length} of {moviesData.total_count} movies
         </div>

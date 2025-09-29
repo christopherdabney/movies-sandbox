@@ -15,7 +15,7 @@ function App() {
       </header>
       <main>
         <Routes>
-          <Route path="movies" element={<Movies />} />
+          <Route path="/" element={<Movies />} />
           <Route path="register" element={<Register />} />
           <Route path="login" element={<Login />} />
           <Route path="home" element={

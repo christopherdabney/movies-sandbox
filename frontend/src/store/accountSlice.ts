@@ -24,12 +24,9 @@ const initialState: RegistrationState = {
 
 export const accountRecord = createAsyncThunk(
   'member/account',
-  async (data: Omit<RegistrationRecord, 'id' | 'createdAt'>) => {
+  async () => {
     const response = await fetch(API_ENDPOINTS.MEMBER.ACCOUNT, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       credentials: 'include',
     })
 

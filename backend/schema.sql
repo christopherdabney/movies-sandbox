@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS movie (
     genre VARCHAR(100),
     rating VARCHAR(10),  -- 'PG', 'R', 'PG-13', etc.
     imdb_rating DECIMAL(3,1),  -- 7.5, 8.2, etc.
+    poster_url VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

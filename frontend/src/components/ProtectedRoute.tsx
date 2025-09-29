@@ -15,12 +15,12 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   useEffect(() => {
     if (!account && !authChecked && !loading) {
+      setAuthChecked(true)
       dispatch(accountRecord())
-        .finally(() => setAuthChecked(true))
     } else if (account && !authChecked) {
       setAuthChecked(true)
     }
-  }, [dispatch, account, authChecked, loading]) // Add loading to dependencies
+  }, [dispatch, account, authChecked, loading])
 
   // Still checking auth
   if (!authChecked && loading) {

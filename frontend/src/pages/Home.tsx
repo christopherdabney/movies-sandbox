@@ -10,6 +10,7 @@ function Home() {
   const navigate = useNavigate();
   const { account, error, loading } = useSelector((state: RootState) => state.account)
 
+  /*
   useEffect(() => {
     const loadAccount = async () => {
       try {
@@ -25,6 +26,7 @@ function Home() {
   if (!account) {
     return null;
   }
+  */
   return (
     <div className="home-container">
       <div className="home-content">
