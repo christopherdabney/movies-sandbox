@@ -76,6 +76,16 @@ const Movies: React.FC = () => {
     }
   };
 
+  const handleFirstPage = () => {
+    setCurrentPage(1);
+  };
+
+  const handleLastPage = () => {
+    if (moviesData) {
+      setCurrentPage(moviesData.total_pages);
+    }
+  };
+
   const handlePreviousPage = () => {
     if (moviesData && currentPage > 1) {
       setCurrentPage(currentPage - 1);
@@ -191,6 +201,14 @@ const Movies: React.FC = () => {
 
       <div className="pagination-controls">
         <button
+          onClick={handleFirstPage}
+          disabled={currentPage === 1}
+          className="pagination-btn"
+        >
+          First
+        </button>
+        
+        <button
           onClick={handlePreviousPage}
           disabled={currentPage === 1}
           className="pagination-btn"
@@ -208,6 +226,14 @@ const Movies: React.FC = () => {
           className="pagination-btn"
         >
           Next →
+        </button>
+        
+        <button
+          onClick={handleLastPage}
+          disabled={currentPage === moviesData.total_pages}
+          className="pagination-btn"
+        >
+          Last
         </button>
       </div>
       {showLoginPrompt && <LoginPrompt onClose={() => setShowLoginPrompt(false)} />}
