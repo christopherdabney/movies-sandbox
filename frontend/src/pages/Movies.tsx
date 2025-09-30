@@ -29,14 +29,37 @@ const Movies: React.FC = () => {
   const [moviesData, setMoviesData] = useState<MoviesResponse | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  const fetchMovies = async (page: number, limit: number = 24) => {
+  // Debounce effect - only updates debouncedSearch
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchInput]);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch]);
+
+  // Fetch effect - triggers on debouncedSearch or page change
+  useEffect(() => {
+    fetchMovies(currentPage, 24, debouncedSearch);
+  }, [debouncedSearch, currentPage]);
+
+  const fetchMovies = async (page: number, limit: number = 24, search: string = '') => {
     setLoading(true);
     setError(null);
     
     try {
-      const response = await fetch(`${API_ENDPOINTS.MOVIES.LIST}?page=${page}&limit=${limit}`, {
+      const url = `${API_ENDPOINTS.MOVIES.LIST}?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`;
+      const response = await fetch(url, {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -50,7 +73,7 @@ const Movies: React.FC = () => {
       
       const data: MoviesResponse = await response.json();
       setMoviesData(data);
-      setCurrentPage(page);
+      setInitialLoad(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch movies');
     } finally {
@@ -58,19 +81,15 @@ const Movies: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    fetchMovies(1);
-  }, []);
-
   const handlePreviousPage = () => {
     if (moviesData && currentPage > 1) {
-      fetchMovies(currentPage - 1);
+      setCurrentPage(currentPage - 1);
     }
   };
 
   const handleNextPage = () => {
     if (moviesData && currentPage < moviesData.total_pages) {
-      fetchMovies(currentPage + 1);
+      setCurrentPage(currentPage + 1);
     }
   };
 
@@ -88,7 +107,7 @@ const Movies: React.FC = () => {
       if (!response.ok) {
         throw new Error('Failed to add to watchlist');
       }
-      // Update the movies array inside moviesData
+
       setMoviesData(prevData => {
         if (!prevData) return prevData;
         
@@ -106,7 +125,7 @@ const Movies: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (loading && initialLoad) {
     return (
       <div className="movies-container">
         <div className="loading-state">
@@ -138,14 +157,20 @@ const Movies: React.FC = () => {
 
   return (
     <div className="movies-container">
-      {/* Header with pagination info */}
       <div className="movies-header">
+        <input
+          type="text"
+          placeholder="Search movies..."
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          className="search-input"
+        />
         <div className="movies-count">
           Showing {moviesData.movies.length} of {moviesData.total_count} movies
+          {loading && !initialLoad && <span> (searching...)</span>}
         </div>
       </div>
 
-      {/* Movie grid */}
       <div className="movies-grid">
         {moviesData.movies.map((movie) => (
           <MovieTile
@@ -156,7 +181,6 @@ const Movies: React.FC = () => {
         ))}
       </div>
 
-      {/* Pagination controls */}
       <div className="pagination-controls">
         <button
           onClick={handlePreviousPage}

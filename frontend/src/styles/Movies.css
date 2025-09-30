@@ -193,3 +193,24 @@
 .add-to-watchlist-btn:active {
   background-color: #1e40af;
 }
+
+.search-input {
+  padding: 0.75rem 1rem;
+  background-color: #16213e;
+  border: 2px solid #0f3460;
+  border-radius: 8px;
+  color: #eee;
+  font-size: 1rem;
+  width: 300px;
+  transition: all 0.2s ease;
+}
+
+.search-input::placeholder {
+  color: #a0a0a0;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #0e6ba8;
+  box-shadow: 0 0 0 3px rgba(14, 107, 168, 0.2);
+}

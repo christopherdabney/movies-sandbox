@@ -12,12 +12,20 @@ def get(member_id=None):
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('limit', 20, type=int)
     offset = (page - 1) * per_page
+    search = request.args.get('search', '', type=str)  # Add this
     
+    # Build base query
+    query = Movie.query
+    
+    # Apply search filter if provided
+    if search:
+        query = query.filter(Movie.title.ilike(f'%{search}%'))
+
     # Manual LIMIT/OFFSET with SQLAlchemy
     movies_list = []
     if member_id:
         # Query movies with LEFT JOIN to watchlist
-        movies_query = Movie.query\
+        movies_query = query\
             .outerjoin(Watchlist, and_(
                 Watchlist.movie_id == Movie.id,
                 Watchlist.user_id == member_id
@@ -34,7 +42,7 @@ def get(member_id=None):
 
         total_count = Movie.query.count()
     else:
-        movies = Movie.query.offset(offset).limit(per_page).all()
+        movies = query.offset(offset).limit(per_page).all()
         total_count = Movie.query.count()
         movies_list = [movie.to_dict() for movie in movies]
 
