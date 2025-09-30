@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Movie } from '../types';
+import { useNavigate } from 'react-router-dom';
 import '../styles/MovieTile.css';
 
 interface MovieTileProps {
@@ -17,6 +18,7 @@ const MovieTile: React.FC<MovieTileProps> = ({
   onRemoveFromWatchlist,
   onMarkAsWatched
 }) => {
+  const navigate = useNavigate();
   const initials = movie.title.split(' ')
     .map(word => word[0])
     .join('')
@@ -24,7 +26,7 @@ const MovieTile: React.FC<MovieTileProps> = ({
     .toUpperCase();
 
   return (
-    <div className="movie-tile">
+    <div className="movie-tile" onClick={() => navigate(`/movies/${movie.id}`)}>
       {movie.poster_url ? (
         <img 
           src={movie.poster_url} 
@@ -44,7 +46,10 @@ const MovieTile: React.FC<MovieTileProps> = ({
             !movie.inWatchlist && onAddToWatchlist && (
             <button 
               className="add-to-watchlist-btn"
-              onClick={() => onAddToWatchlist(movie.id)}
+              onClick={e => {
+                e.stopPropagation();
+                onAddToWatchlist(movie.id)
+              }}
             >
               + Add to Watchlist
             </button>
@@ -53,14 +58,20 @@ const MovieTile: React.FC<MovieTileProps> = ({
           <div className="watchlist-actions">
             <button 
               className="remove-btn"
-              onClick={() => onRemoveFromWatchlist(movie.id)}
+              onClick={e => {
+                e.stopPropagation();
+                onRemoveFromWatchlist(movie.id)
+              }}
             >
               Remove
             </button>
             {watchlistStatus === 'queued' && (
               <button 
                 className="mark-watched-btn"
-                onClick={() => onMarkAsWatched(movie.id)}
+                onClick={e => {
+                  e.stopPropagation();
+                  onMarkAsWatched(movie.id)
+                }}
               >
                 Mark Watched
               </button>

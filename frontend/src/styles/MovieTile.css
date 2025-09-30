@@ -8,6 +8,7 @@
   transition: transform 0.2s, box-shadow 0.2s;
   display: flex;
   flex-direction: column;
+  cursor: pointer;
 }
 
 .movie-tile:hover {

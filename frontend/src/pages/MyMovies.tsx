@@ -77,7 +77,6 @@ const MyMovies: React.FC = () => {
       });
     } catch (err) {
       console.error('Error removing from watchlist:', err);
-      alert('Failed to remove movie from watchlist');
     }
   };
 
@@ -111,7 +110,6 @@ const MyMovies: React.FC = () => {
       });
     } catch (err) {
       console.error('Error marking as watched:', err);
-      alert('Failed to mark movie as watched');
     }
   };
 

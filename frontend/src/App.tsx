@@ -5,6 +5,7 @@ import Login from './pages/Login.tsx'
 import Home from './pages/Home.tsx'
 import Movies from './pages/Movies.tsx'
 import MyMovies from './pages/MyMovies.tsx'
+import MovieDetail from './pages/MovieDetail.tsx'
 import Navigation from './Navigation.tsx'
 
 import { useEffect } from 'react'
@@ -30,6 +31,7 @@ function App() {
       <main>
         <Routes>
           <Route path="/" element={<Movies />} />
+          <Route path="/movies/:id" element={<MovieDetail />} />
           <Route path="register" element={<Register />} />
           <Route path="login" element={<Login />} />
           <Route path="home" element={
