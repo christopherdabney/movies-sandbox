@@ -8,7 +8,7 @@ movies_bp = Blueprint('movies', __name__, url_prefix='/movies')
 
 @movies_bp.route('', methods=['GET'])
 @token_optional
-def get(member_id=None):
+def list(member_id=None):
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('limit', 20, type=int)
     offset = (page - 1) * per_page
@@ -55,6 +55,40 @@ def get(member_id=None):
         'total_count': total_count,
         'total_pages': (total_count + per_page - 1) // per_page
     })
+
+@movies_bp.route('/<int:id>', methods=['GET'])
+@token_optional
+def get(id, member_id=None):
+    if member_id:
+        # Query with watchlist data
+        result = Movie.query\
+            .outerjoin(Watchlist, and_(
+                Watchlist.movie_id == Movie.id,
+                Watchlist.user_id == member_id
+            ))\
+            .add_columns(
+                Watchlist.id.isnot(None).label('in_watchlist'),
+                Watchlist.status
+            )\
+            .filter(Movie.id == id)\
+            .first()
+        
+        if not result:
+            return jsonify({'error': 'Movie not found'}), 404
+        
+        movie, in_watchlist, status = result
+        movie_dict = movie.to_dict()
+        movie_dict['inWatchlist'] = in_watchlist
+        if status:
+            movie_dict['watchlistStatus'] = status.value
+        
+        return jsonify(movie_dict)
+    else:
+        # No auth - just return movie
+        movie = Movie.query.get(id)
+        if not movie:
+            return jsonify({'error': 'Movie not found'}), 404
+        return jsonify(movie.to_dict())
 
 @movies_bp.route('/genres', methods=['GET'])
 def genres():
