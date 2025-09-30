@@ -6,6 +6,9 @@ from datetime import datetime, timedelta
 from functools import wraps
 from flask import request, jsonify
 
+AUTHENTICATION_COOKIE = 'auth_token'
+AUTHENTICATION_LIFETIME = 30  # minutes
+
 def hash_password(password):
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
@@ -15,26 +18,26 @@ def check_password(password, password_hash):
 def add_token(response, member_id, secure=False):
     token = jwt.encode({
         'member_id': member_id,
-        'exp': datetime.utcnow() + timedelta(minutes=5)
+        'exp': datetime.utcnow() + timedelta(minutes=AUTHENTICATION_LIFETIME)
     }, Config.SECRET_KEY, algorithm='HS256')
     response.set_cookie(
-        'auth_token',           # Cookie name
-        token,                  # JWT token value
-        max_age=30*60,           # 30 minutes in seconds
-        httponly=True,          # JavaScript can't access it
-        secure=secure,            # Only sent over HTTPS (set False for development)
-        samesite='Strict',       # CSRF protection
+        AUTHENTICATION_COOKIE,              # Cookie name
+        token,                              # JWT token value
+        max_age=AUTHENTICATION_LIFETIME*60,
+        httponly=True,                      # httponly cookies are safe from javascript
+        secure=secure,                      # Only sent over HTTPS (set False for development)
+        samesite='Strict',                  # CSRF protection
         path='/',
     )
     return response
 
 def remove_token(response, secure=False):
     response.set_cookie(
-        'auth_token', 
-        '',                    # Empty value
-        max_age=0,            # Expire immediately
+        AUTHENTICATION_COOKIE, 
+        '',                                 # kill token
+        max_age=0,                          # expire immediately
         httponly=True,
-        secure=secure,         # Match your login settings
+        secure=secure,
         samesite='Strict',
         path='/',
     )
@@ -43,7 +46,7 @@ def remove_token(response, secure=False):
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = request.cookies.get('auth_token')
+        token = request.cookies.get(AUTHENTICATION_COOKIE)
         
         if not token:
             return jsonify({'error': 'Token missing'}), 401
@@ -62,7 +65,7 @@ def token_required(f):
 def token_optional(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = request.cookies.get('auth_token')
+        token = request.cookies.get(AUTHENTICATION_COOKIE)
         member_id = None
         
         if token:
