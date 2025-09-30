@@ -6,9 +6,22 @@ import Home from './pages/Home.tsx'
 import Movies from './pages/Movies.tsx'
 import MyMovies from './pages/MyMovies.tsx'
 import Navigation from './Navigation.tsx'
+
+import { useEffect } from 'react'
+import { useDispatch } from 'react-redux'
+import { accountRecord } from './store/accountSlice'
+import type { AppDispatch } from './store/store'
+
 import './styles/App.css'
 
 function App() {
+  const dispatch = useDispatch<AppDispatch>()
+
+  useEffect(() => {
+    // Try to restore session from cookie on app load
+    dispatch(accountRecord())
+  }, [dispatch])
+
   return (
     <Router>
       <header>

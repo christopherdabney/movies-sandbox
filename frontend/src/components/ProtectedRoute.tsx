@@ -28,7 +28,7 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   // Auth check complete, but no account - redirect
-  if (authChecked && !account) {
+  if (authChecked && !account && !loading) {
     return <Navigate to="/login" replace />
   }
 

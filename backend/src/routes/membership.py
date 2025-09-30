@@ -9,6 +9,7 @@ membership_bp = Blueprint('membership', __name__, url_prefix='/member')
 @membership_bp.route('', methods=['GET'])
 @token_required
 def account(member_id):
+    print('account endpoint called with', member_id)
     member = Member.query.get(member_id)
     if member:
         return jsonify(member.to_dict())

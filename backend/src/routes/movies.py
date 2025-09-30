@@ -42,7 +42,7 @@ def get(member_id=None):
             movie_dict['inWatchlist'] = in_watchlist
             movies_list.append(movie_dict)
 
-        total_count = Movie.query.count()
+        total_count = query.count()
     else:
         movies = query.offset(offset).limit(per_page).all()
         total_count = Movie.query.count()

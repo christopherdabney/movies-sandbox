@@ -29,11 +29,11 @@ export const accountRecord = createAsyncThunk(
       method: 'GET',
       credentials: 'include',
     })
-
+    //console.log('2')
     if (!response.ok) {
       throw new Error('Failed to get account data')
     }
-
+    //console.log('3')
     return await response.json()
   }
 )
@@ -50,6 +50,7 @@ export const loginRecord = createAsyncThunk(
       credentials: 'include',
     })
 
+    console.log('1')
     if (!response.ok) {
       let errorMessage = 'Failed to log in'
       try {
