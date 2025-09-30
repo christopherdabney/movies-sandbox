@@ -1,23 +1,10 @@
 import React from 'react';
+import type { Movie } from '../types';
 import '../styles/Movies.css';
-
-interface Movie {
-  id: number;
-  title: string;
-  director: string;
-  release_year: number;
-  genre: string;
-  description: string;
-  runtime_minutes: number;
-  rating: string;
-  poster_url?: string;
-  imdb_rating?: number;
-}
 
 interface MovieTileProps {
   movie: Movie;
   onAddToWatchlist?: (movieId: number) => void;
-  // Props for My Movies page
   watchlistStatus?: string;
   onRemoveFromWatchlist?: (movieId: number) => void;
   onMarkAsWatched?: (movieId: number) => void;

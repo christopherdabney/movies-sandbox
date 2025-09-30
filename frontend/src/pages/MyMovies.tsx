@@ -1,35 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { API_ENDPOINTS } from '../constants/api';
 import MovieTile from '../components/MovieTile';
+
+import type { Movie, WatchlistItem, WatchlistResponse } from '../types';
 import '../styles/MyMovies.css';
-
-interface Movie {
-  id: number;
-  title: string;
-  director: string;
-  release_year: number;
-  genre: string;
-  description: string;
-  runtime_minutes: number;
-  rating: string;
-  poster_url?: string;
-  imdb_rating?: number;
-}
-
-interface WatchlistItem {
-  id: number;
-  userId: number;
-  movieId: number;
-  status: string;
-  addedAt: string;
-  watchedAt: string | null;
-  movie: Movie;
-}
-
-interface WatchlistResponse {
-  watchlist: WatchlistItem[];
-  count: number;
-}
 
 const MyMovies: React.FC = () => {
   const [watchlistData, setWatchlistData] = useState<WatchlistResponse | null>(null);

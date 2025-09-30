@@ -6,29 +6,8 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
 import LoginPrompt from '../components/LoginPrompt';
 
-import '../styles/Movies.css';
-
-interface Movie {
-  id: number;
-  title: string;
-  director: string;
-  release_year: number;
-  genre: string;
-  description: string;
-  runtime_minutes: number;
-  rating: string;
-  poster_url?: string;
-  imdb_rating?: number;
-  inWatchlist?: boolean;
-}
-
-interface MoviesResponse {
-  movies: Movie[];
-  page: number;
-  per_page: number;
-  total_count: number;
-  total_pages: number;
-}
+import type { Movie, MoviesResponse } from '../types';
+import '../styles/Movies.css'; 
 
 const Movies: React.FC = () => {
   const [moviesData, setMoviesData] = useState<MoviesResponse | null>(null);

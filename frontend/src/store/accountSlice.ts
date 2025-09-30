@@ -1,14 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { API_ENDPOINTS } from '../constants/api';
+import type { RegistrationRecord } from '../types';
 
-export interface RegistrationRecord {
-  id?: number
-  email: string
-  password: string
-  firstName: string
-  lastName: string
-  createdAt?: string
-}
 
 interface RegistrationState {
   account: RegistrationRecord | null
