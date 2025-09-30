@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { API_ENDPOINTS } from '../constants/api';
 import MovieTile from '../components/MovieTile';
+
+import { useSelector } from 'react-redux';
+import type { RootState } from '../store/store';
+import LoginPrompt from '../components/LoginPrompt';
+
 import '../styles/Movies.css';
 
 interface Movie {
@@ -35,6 +40,8 @@ const Movies: React.FC = () => {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [genres, setGenres] = useState<string[]>([]);
   const [selectedGenre, setSelectedGenre] = useState('');
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const { account } = useSelector((state: RootState) => state.account);
 
   // Fetch genres on mount
   useEffect(() => {
@@ -103,6 +110,11 @@ const Movies: React.FC = () => {
   };
 
   const handleAddToWatchlist = async (movieId: number) => {
+    if (!account) {
+      setShowLoginPrompt(true);
+      return;
+    }
+
     try {
       const response = await fetch(API_ENDPOINTS.WATCHLIST.ADD, {
         method: 'POST',
@@ -219,6 +231,7 @@ const Movies: React.FC = () => {
           Next →
         </button>
       </div>
+      {showLoginPrompt && <LoginPrompt onClose={() => setShowLoginPrompt(false)} />}
     </div>
   );
 };

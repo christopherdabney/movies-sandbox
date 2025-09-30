@@ -54,7 +54,7 @@ const MovieTile: React.FC<MovieTileProps> = ({
         <p className="movie-year">{movie.release_year}</p>
         <p className="movie-genre">{movie.genre}</p>
         {
-            movie.inWatchlist === false && onAddToWatchlist && (
+            !movie.inWatchlist && onAddToWatchlist && (
             <button 
               className="add-to-watchlist-btn"
               onClick={() => onAddToWatchlist(movie.id)}
