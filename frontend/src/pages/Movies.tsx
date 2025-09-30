@@ -1,26 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { API_ENDPOINTS } from '../constants/api';
-import MovieTile from '../components/MovieTile';
-
+import { useSearchParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { API_ENDPOINTS } from '../constants/api';
 import type { RootState } from '../store/store';
-import LoginPrompt from '../components/LoginPrompt';
-
 import type { Movie, MoviesResponse } from '../types';
-import '../styles/Movies.css'; 
+import MovieTile from '../components/MovieTile';
+import LoginPrompt from '../components/LoginPrompt';
+import '../styles/Movies.css';
 
 const Movies: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { account } = useSelector((state: RootState) => state.account);
+  
+  // Read from URL
+  const searchQuery = searchParams.get('search') || '';
+  const genreFilter = searchParams.get('genre') || '';
+  const currentPage = parseInt(searchParams.get('page') || '1');
+  
   const [moviesData, setMoviesData] = useState<MoviesResponse | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchInput, setSearchInput] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [genres, setGenres] = useState<string[]>([]);
-  const [selectedGenre, setSelectedGenre] = useState('');
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
-  const { account } = useSelector((state: RootState) => state.account);
+  
+  // Local state for debouncing search input
+  const [searchInput, setSearchInput] = useState(searchQuery);
 
   // Fetch genres on mount
   useEffect(() => {
@@ -29,24 +34,30 @@ const Movies: React.FC = () => {
       .then(data => setGenres(data.genres));
   }, []);
 
-  // Debounce effect - only updates debouncedSearch
+  // Debounce: Update URL params after user stops typing
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      setDebouncedSearch(searchInput);
+      if (searchInput !== searchQuery) {
+        setSearchParams({
+          search: searchInput,
+          genre: genreFilter,
+          page: '1'
+        });
+      }
     }, 300);
 
     return () => clearTimeout(timeoutId);
   }, [searchInput]);
 
-  // Reset to page 1 when search changes
+  // Sync local input with URL (for back/forward navigation)
   useEffect(() => {
-    setCurrentPage(1);
-  }, [debouncedSearch]);
+    setSearchInput(searchQuery);
+  }, [searchQuery]);
 
-  // Fetch effect - triggers on debouncedSearch or page change
+  // Fetch movies when URL params change
   useEffect(() => {
-    fetchMovies(currentPage, 24, debouncedSearch, selectedGenre);
-  }, [debouncedSearch, currentPage, selectedGenre]);
+    fetchMovies(currentPage, 24, searchQuery, genreFilter);
+  }, [searchQuery, genreFilter, currentPage]);
 
   const fetchMovies = async (page: number, limit: number = 24, search: string = '', genre: string = '') => {
     setLoading(true);
@@ -76,25 +87,49 @@ const Movies: React.FC = () => {
     }
   };
 
-  const handleFirstPage = () => {
-    setCurrentPage(1);
-  };
-
-  const handleLastPage = () => {
-    if (moviesData) {
-      setCurrentPage(moviesData.total_pages);
-    }
+  const handleGenreChange = (value: string) => {
+    setSearchParams({
+      search: searchQuery,
+      genre: value,
+      page: '1'
+    });
   };
 
   const handlePreviousPage = () => {
-    if (moviesData && currentPage > 1) {
-      setCurrentPage(currentPage - 1);
+    if (currentPage > 1) {
+      setSearchParams({
+        search: searchQuery,
+        genre: genreFilter,
+        page: String(currentPage - 1)
+      });
     }
   };
 
   const handleNextPage = () => {
     if (moviesData && currentPage < moviesData.total_pages) {
-      setCurrentPage(currentPage + 1);
+      setSearchParams({
+        search: searchQuery,
+        genre: genreFilter,
+        page: String(currentPage + 1)
+      });
+    }
+  };
+
+  const handleFirstPage = () => {
+    setSearchParams({
+      search: searchQuery,
+      genre: genreFilter,
+      page: '1'
+    });
+  };
+
+  const handleLastPage = () => {
+    if (moviesData) {
+      setSearchParams({
+        search: searchQuery,
+        genre: genreFilter,
+        page: String(moviesData.total_pages)
+      });
     }
   };
 
@@ -176,8 +211,8 @@ const Movies: React.FC = () => {
           className="search-input"
         />
         <select 
-          value={selectedGenre} 
-          onChange={(e) => setSelectedGenre(e.target.value)}
+          value={genreFilter} 
+          onChange={(e) => handleGenreChange(e.target.value)}
           className="genre-select"
         >
           <option value="">All Genres</option>
@@ -205,7 +240,7 @@ const Movies: React.FC = () => {
           disabled={currentPage === 1}
           className="pagination-btn"
         >
-          First
+          ⏮ First
         </button>
         
         <button
@@ -233,9 +268,10 @@ const Movies: React.FC = () => {
           disabled={currentPage === moviesData.total_pages}
           className="pagination-btn"
         >
-          Last
+          Last ⏭
         </button>
       </div>
+
       {showLoginPrompt && <LoginPrompt onClose={() => setShowLoginPrompt(false)} />}
     </div>
   );
