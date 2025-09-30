@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Movie } from '../types';
-import '../styles/Movies.css';
+import '../styles/MovieTile.css';
 
 interface MovieTileProps {
   movie: Movie;

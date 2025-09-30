@@ -37,80 +37,6 @@
   margin-bottom: 3rem;
 }
 
-/* Movie Tile */
-.movie-tile {
-  background: #16213e;
-  border-radius: 12px;
-  overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border: 2px solid #0f3460;
-  cursor: pointer;
-}
-
-.movie-tile:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 24px rgba(14, 107, 168, 0.3);
-  border-color: #0e6ba8;
-}
-
-/* Poster Image */
-.movie-poster {
-  width: 100%;
-  aspect-ratio: 2/3;
-  object-fit: cover;
-  display: block;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-/* Poster Placeholder (for movies without images) */
-.movie-poster-placeholder {
-  width: 100%;
-  aspect-ratio: 2/3;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.movie-initials {
-  font-size: 3rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.9);
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-/* Movie Info Section */
-.movie-info {
-  padding: 1rem;
-  background: #16213e;
-}
-
-.movie-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #eee;
-  margin: 0 0 0.5rem 0;
-  line-height: 1.3;
-  min-height: 2.6rem;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.movie-details {
-  font-size: 0.875rem;
-  color: #a0a0a0;
-  margin: 0 0 0.25rem 0;
-}
-
-.movie-rating {
-  font-size: 0.875rem;
-  color: #0e6ba8;
-  font-weight: 600;
-  margin: 0;
-}
-
 /* Pagination Controls */
 .pagination-controls {
   display: flex;
@@ -170,28 +96,6 @@
 
 .error-state {
   color: #e63946;
-}
-
-.add-to-watchlist-btn {
-  margin-top: 12px;
-  padding: 8px 16px;
-  background-color: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  width: 100%;
-}
-
-.add-to-watchlist-btn:hover {
-  background-color: #1d4ed8;
-}
-
-.add-to-watchlist-btn:active {
-  background-color: #1e40af;
 }
 
 .search-input {
