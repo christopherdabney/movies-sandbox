@@ -13,13 +13,15 @@ def get(member_id=None):
     per_page = request.args.get('limit', 20, type=int)
     offset = (page - 1) * per_page
     search = request.args.get('search', '', type=str)  # Add this
-    
+    genre = request.args.get('genre', '', type=str)
+
     # Build base query
     query = Movie.query
     
-    # Apply search filter if provided
     if search:
         query = query.filter(Movie.title.ilike(f'%{search}%'))
+    if genre:
+        query = query.filter(Movie.genre == genre)
 
     # Manual LIMIT/OFFSET with SQLAlchemy
     movies_list = []
@@ -52,4 +54,16 @@ def get(member_id=None):
         'per_page': per_page,
         'total_count': total_count,
         'total_pages': (total_count + per_page - 1) // per_page
+    })
+
+@movies_bp.route('/genres', methods=['GET'])
+def genres():
+    genres = Movie.query\
+        .with_entities(Movie.genre)\
+        .distinct()\
+        .order_by(Movie.genre)\
+        .all()
+    
+    return jsonify({
+        'genres': [g[0] for g in genres if g[0]]  # Filter out None values
     })

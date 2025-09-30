@@ -10,7 +10,7 @@
 /* Header Section */
 .movies-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
@@ -213,4 +213,34 @@
   outline: none;
   border-color: #0e6ba8;
   box-shadow: 0 0 0 3px rgba(14, 107, 168, 0.2);
+}
+
+.genre-select {
+  margin: 0 24px;
+  padding: 0.75rem 1rem;
+  padding-right: 2.5rem; /* Space for arrow */
+  background-color: #16213e;
+  border: 2px solid #0f3460;
+  border-radius: 8px;
+  color: #eee;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 200px;
+  appearance: none; /* Remove default arrow */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23eeeeee' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center; /* Position arrow 1rem from right */
+  background-size: 12px;
+}
+
+.genre-select:focus {
+  outline: none;
+  border-color: #0e6ba8;
+  box-shadow: 0 0 0 3px rgba(14, 107, 168, 0.2);
+}
+
+.genre-select option {
+  background-color: #16213e;
+  color: #eee;
 }

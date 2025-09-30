@@ -11,6 +11,7 @@ export const API_ENDPOINTS = {
   MOVIES: {
     LIST: `${API_BASE_URL}/movies`,
     DETAIL: (id) => `${API_BASE_URL}/movies/${id}`,
+    GENRES: `${API_BASE_URL}/movies/genres`,
   },
   WATCHLIST: {
     LIST: `${API_BASE_URL}/watchlist`,

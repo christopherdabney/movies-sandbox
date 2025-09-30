@@ -33,6 +33,15 @@ const Movies: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [genres, setGenres] = useState<string[]>([]);
+  const [selectedGenre, setSelectedGenre] = useState('');
+
+  // Fetch genres on mount
+  useEffect(() => {
+    fetch(API_ENDPOINTS.MOVIES.GENRES, { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => setGenres(data.genres));
+  }, []);
 
   // Debounce effect - only updates debouncedSearch
   useEffect(() => {
@@ -50,15 +59,15 @@ const Movies: React.FC = () => {
 
   // Fetch effect - triggers on debouncedSearch or page change
   useEffect(() => {
-    fetchMovies(currentPage, 24, debouncedSearch);
-  }, [debouncedSearch, currentPage]);
+    fetchMovies(currentPage, 24, debouncedSearch, selectedGenre);
+  }, [debouncedSearch, currentPage, selectedGenre]);
 
-  const fetchMovies = async (page: number, limit: number = 24, search: string = '') => {
+  const fetchMovies = async (page: number, limit: number = 24, search: string = '', genre: string = '') => {
     setLoading(true);
     setError(null);
     
     try {
-      const url = `${API_ENDPOINTS.MOVIES.LIST}?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`;
+      const url = `${API_ENDPOINTS.MOVIES.LIST}?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}&genre=${encodeURIComponent(genre)}`;
       const response = await fetch(url, {
         method: 'GET',
         credentials: 'include',
@@ -165,6 +174,14 @@ const Movies: React.FC = () => {
           onChange={(e) => setSearchInput(e.target.value)}
           className="search-input"
         />
+        <select 
+          value={selectedGenre} 
+          onChange={(e) => setSelectedGenre(e.target.value)}
+          className="genre-select"
+        >
+          <option value="">All Genres</option>
+          {genres.map(g => <option key={g} value={g}>{g}</option>)}
+        </select>
         <div className="movies-count">
           Showing {moviesData.movies.length} of {moviesData.total_count} movies
           {loading && !initialLoad && <span> (searching...)</span>}
