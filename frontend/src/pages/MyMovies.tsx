@@ -83,7 +83,7 @@ const MyMovies: React.FC = () => {
   const handleMarkAsWatched = async (movieId: number) => {
     try {
       const response = await fetch(API_ENDPOINTS.WATCHLIST.UPDATE(movieId), {
-        method: 'PUT',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },

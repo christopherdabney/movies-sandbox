@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from database import db
 from models.watchlist import Watchlist, WatchlistStatus
+from sqlalchemy.orm import joinedload
 from models.movie import Movie
 from auth import token_required
 from datetime import datetime
@@ -50,9 +51,11 @@ def post(member_id):
 @token_required
 def get(member_id):
     """Get user's watchlist with optional status filter"""
-    status_filter = request.args.get('status')  # Optional: ?status=queued or ?status=watched
+    status_filter = request.args.get('status')
     
-    query = Watchlist.query.filter_by(user_id=member_id)
+    query = Watchlist.query\
+        .filter_by(user_id=member_id)\
+        .options(joinedload(Watchlist.movie))  # Eager load the movie relationship
     
     # Apply status filter if provided
     if status_filter:
@@ -60,19 +63,17 @@ def get(member_id):
     
     watchlist_items = query.all()
     
-    # Get movie details for each watchlist item
     results = []
     for item in watchlist_items:
-        movie = Movie.query.get(item.movie_id)
-        if movie:
-            result = item.to_dict()
-            result['movie'] = movie.to_dict()
-            results.append(result)
+        result = item.to_dict()
+        result['movie'] = item.movie.to_dict()
+        results.append(result)
     
     return jsonify({
         'watchlist': results,
         'count': len(results)
     }), 200
+
 
 @watchlist_bp.route('/<int:movie_id>', methods=['DELETE'])
 @token_required
@@ -94,7 +95,7 @@ def delete(member_id, movie_id):
         'movieId': movie_id
     }), 200
 
-@watchlist_bp.route('/<int:movie_id>', methods=['PUT'])
+@watchlist_bp.route('/<int:movie_id>', methods=['PATCH'])
 @token_required
 def update(member_id, movie_id):
     """Update watchlist item status (mark as watched/queued)"""
