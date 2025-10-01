@@ -24,6 +24,7 @@ psycopg2-binary==2.9.10
 pycparser==2.23
 PyJWT==2.8.0
 pytest==7.4.4
+python-dotenv==1.1.1
 requests==2.31.0
 SQLAlchemy==2.0.43
 tomli==2.0.1

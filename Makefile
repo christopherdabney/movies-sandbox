@@ -118,7 +118,7 @@ full-clean: clean clean-db
 	@echo "Full clean complete"
 
 # Development helpers
-backend-shell:
+shell:
 	cd backend && source venv/bin/activate && bash
 
 # Show detailed logs from last install

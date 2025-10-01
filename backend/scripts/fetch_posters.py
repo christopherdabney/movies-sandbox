@@ -2,9 +2,12 @@ import os
 import requests
 import psycopg2
 import time
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # TMDB Configuration
-TMDB_API_KEY = '3e763992a63669784fd1128de0880640'
+TMDB_API_KEY = os.getenv('TMDB_API_KEY')
 TMDB_BASE_URL = 'https://api.themoviedb.org/3'
 TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500'
 
