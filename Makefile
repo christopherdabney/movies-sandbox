@@ -129,6 +129,11 @@ show-logs:
 	@echo "=== Node.js install log ==="
 	@cat /tmp/npm-install.log 2>/dev/null || echo "No Node.js install log found"
 
+# Test Claude API connection
+vc:
+	@echo "Testing Claude API connection..."
+	@cd backend && source venv/bin/activate && python scripts/verify_claude.py
+
 # Show clean project structure
 tree:
 	tree -I 'node_modules|venv|__pycache__|*.pyc|*.db'
