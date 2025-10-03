@@ -21,5 +21,7 @@ export const API_ENDPOINTS = {
   },
   CHAT: {
     MESSAGE: `${API_BASE_URL}/chat/message`,
+    HISTORY: `${API_BASE_URL}/chat/history`,
+    CLEAR: `${API_BASE_URL}/chat/clear`,
   }
 };

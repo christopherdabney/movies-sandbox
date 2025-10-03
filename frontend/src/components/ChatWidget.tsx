@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import ConfirmDialog from './ConfirmDialog';
 import { API_ENDPOINTS } from '../constants/api';
 import '../styles/ChatWidget.css';
 
@@ -7,6 +8,65 @@ const ChatWidget = () => {
   const [messages, setMessages] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+
+  const handleClearChat = async () => {
+    try {
+      const response = await fetch(API_ENDPOINTS.CHAT.CLEAR, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      
+      if (response.ok) {
+        setMessages([]);
+        setHistoryLoaded(false);
+      }
+    } catch (error) {
+      console.error('Error clearing chat:', error);
+    } finally {
+      setShowClearConfirm(false);
+    }
+  };
+
+  // Clear chat on logout
+  useEffect(() => {
+    const handleLogout = () => {
+      setMessages([]);
+      setHistoryLoaded(false);
+      setIsOpen(false);
+    };
+
+    window.addEventListener('user-logout', handleLogout);
+    return () => window.removeEventListener('user-logout', handleLogout);
+  }, []);
+
+  // Load chat history when widget opens
+  useEffect(() => {
+    if (isOpen && !historyLoaded) {
+      loadChatHistory();
+    }
+  }, [isOpen]);
+
+  const loadChatHistory = async () => {
+    try {
+      const response = await fetch(API_ENDPOINTS.CHAT.HISTORY, {
+        credentials: 'include',
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setMessages(data.messages.map((msg: any) => ({
+          role: msg.role,
+          content: msg.content
+        })));
+      }
+      setHistoryLoaded(true);
+    } catch (error) {
+      console.error('Error loading chat history:', error);
+      setHistoryLoaded(true);
+    }
+  };
 
   const toggleChat = () => {
     setIsOpen(!isOpen);
@@ -65,9 +125,20 @@ const ChatWidget = () => {
         <div className="chat-window">
           <div className="chat-header">
             <h3>Movie Chat</h3>
-            <button onClick={toggleChat}>✕</button>
+            <div className="chat-header-actions">
+              {messages.length > 0 && (
+              <button 
+                onClick={() => setShowClearConfirm(true)} 
+                className="clear-chat-btn" 
+                title="Clear chat history"
+              >
+                🗑️
+              </button>
+              )}
+              <button onClick={toggleChat}>✕</button>
+            </div>
           </div>
-          
+                    
           <div className="chat-messages">
             {messages.length === 0 ? (
               <div className="chat-welcome">
@@ -94,6 +165,13 @@ const ChatWidget = () => {
             <button onClick={handleSendMessage}>Send</button>
           </div>
         </div>
+      )}
+      {showClearConfirm && (
+        <ConfirmDialog
+          message="Are you sure you want to clear your chat history? This cannot be undone."
+          onConfirm={handleClearChat}
+          onCancel={() => setShowClearConfirm(false)}
+        />
       )}
     </>
   );

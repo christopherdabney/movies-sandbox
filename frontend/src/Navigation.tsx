@@ -12,7 +12,11 @@ function Navigation() {
 
   const handleLogout = () => {
     dispatch(logoutRecord())
-      .then(() => navigate('/login'))
+      .then(() => {
+        // Clear chat widget state on logout
+        window.dispatchEvent(new CustomEvent('user-logout'));
+        navigate('/login');
+      })
   }
 
   const loggedInNav = (

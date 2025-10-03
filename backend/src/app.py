@@ -32,7 +32,7 @@ app.register_blueprint(chat_bp)
 # Import models for Flask-Migrate (safe now - no circular imports)
 # Todo - can we movie this to top for imports?
 # or perhaps even remove them?
-from models import Member, Movie
+from models import Member, Movie, ChatMessage
 
 @app.errorhandler(404)
 def not_found(error):
