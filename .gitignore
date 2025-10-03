@@ -26,6 +26,7 @@ dist-ssr
 .DS_Store
 Thumbs.db
 
+TODO
 claude
 cookies.txt
 .env
