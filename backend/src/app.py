@@ -7,7 +7,7 @@ load_dotenv()
 
 from config import Config
 from database import init_db
-from routes import membership_bp, movies_bp, watchlist_bp
+from routes import membership_bp, movies_bp, watchlist_bp, chat_bp
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -15,13 +15,23 @@ app.config.from_object(Config)
 init_db(app)
 
 # Allow requests from React dev server
-CORS(app, origins=Config.CORS_ORIGINS, supports_credentials=True)
+#CORS(app, origins=Config.CORS_ORIGINS, supports_credentials=True)
+CORS(
+    app, 
+    origins=Config.CORS_ORIGINS, 
+    supports_credentials=True,
+    allow_headers=['Content-Type'],
+    methods=['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
+)
 
 app.register_blueprint(membership_bp)
 app.register_blueprint(movies_bp)
 app.register_blueprint(watchlist_bp)
+app.register_blueprint(chat_bp)
 
 # Import models for Flask-Migrate (safe now - no circular imports)
+# Todo - can we movie this to top for imports?
+# or perhaps even remove them?
 from models import Member, Movie
 
 @app.errorhandler(404)

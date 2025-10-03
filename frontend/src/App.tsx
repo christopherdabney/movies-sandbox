@@ -7,6 +7,7 @@ import Movies from './pages/Movies.tsx'
 import MyMovies from './pages/MyMovies.tsx'
 import MovieDetail from './pages/MovieDetail.tsx'
 import Navigation from './Navigation.tsx'
+import ChatWidget from './components/ChatWidget'
 
 import { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
@@ -46,6 +47,7 @@ function App() {
           } />
         </Routes>
       </main>
+      <ChatWidget />
     </Router>
   )
 }

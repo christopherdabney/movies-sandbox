@@ -18,5 +18,8 @@ export const API_ENDPOINTS = {
     ADD: `${API_BASE_URL}/watchlist`,
     REMOVE: (id) => `${API_BASE_URL}/watchlist/${id}`,
     UPDATE: (id) => `${API_BASE_URL}/watchlist/${id}`,
+  },
+  CHAT: {
+    MESSAGE: `${API_BASE_URL}/chat/message`,
   }
 };
