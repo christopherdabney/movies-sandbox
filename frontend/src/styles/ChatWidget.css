@@ -27,6 +27,7 @@
   right: 20px;
   width: 380px;
   height: 500px;
+  max-height: calc(100vh - 110px);
   background: white;
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
@@ -72,12 +73,19 @@
 }
 
 .clear-chat-btn {
-  font-size: 20px !important;
-  opacity: 0.8;
+  padding: 10px 20px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+  font-size: 14px;
 }
 
 .clear-chat-btn:hover {
-  opacity: 1;
+  background: #c82333;
 }
 
 .chat-header button:hover {
@@ -168,4 +176,56 @@
 .chat-input button:disabled {
   background: #ccc;
   cursor: not-allowed;
+}
+
+/* Inline confirmation */
+.chat-confirm {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 40px 20px;
+}
+
+.chat-confirm p {
+  text-align: center;
+  color: #333;
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0 0 24px 0;
+}
+
+.chat-confirm-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.confirm-cancel-btn,
+.confirm-delete-btn {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.confirm-cancel-btn {
+  background: #667eea;
+  color: white;
+}
+
+.confirm-cancel-btn:hover {
+  background: #5568d3;
+}
+
+.confirm-delete-btn {
+  background: #6c757d;
+  color: white;
+}
+
+.confirm-delete-btn:hover {
+  background: #5a6268;
 }

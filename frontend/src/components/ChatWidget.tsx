@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import ConfirmDialog from './ConfirmDialog';
+import { useState, useEffect, useRef } from 'react';
 import { API_ENDPOINTS } from '../constants/api';
 import '../styles/ChatWidget.css';
 
@@ -10,6 +9,54 @@ const ChatWidget = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  
+  const [isHovering, setIsHovering] = useState(false);
+
+  // Add ref for messages container
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatWindowRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // Prevent background scroll when hovering over chat
+  useEffect(() => {
+    if (isHovering) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isHovering]);
+
+  // Prevent scroll propagation from messages container
+  useEffect(() => {
+    const messagesContainer = messagesContainerRef.current;
+    if (!messagesContainer) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      const { scrollTop, scrollHeight, clientHeight } = messagesContainer;
+      const isAtTop = scrollTop === 0;
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight;
+
+      // Prevent scroll propagation in all cases
+      if ((e.deltaY < 0 && isAtTop) || (e.deltaY > 0 && isAtBottom) || (!isAtTop && !isAtBottom)) {
+        e.stopPropagation();
+      }
+    };
+
+    messagesContainer.addEventListener('wheel', handleWheel, { passive: true });
+    
+    return () => {
+      messagesContainer.removeEventListener('wheel', handleWheel);
+    };
+  }, [isOpen]);
 
   const handleClearChat = async () => {
     try {
@@ -27,6 +74,10 @@ const ChatWidget = () => {
     } finally {
       setShowClearConfirm(false);
     }
+  };
+
+  const handleCancelClear = () => {
+    setShowClearConfirm(false);
   };
 
   // Clear chat on logout
@@ -69,6 +120,9 @@ const ChatWidget = () => {
   };
 
   const toggleChat = () => {
+    if (showClearConfirm) {
+      setShowClearConfirm(false);
+    }
     setIsOpen(!isOpen);
   };
 
@@ -122,56 +176,73 @@ const ChatWidget = () => {
 
       {/* Chat window */}
       {isOpen && (
-        <div className="chat-window">
+        <div 
+          className="chat-window" 
+          ref={chatWindowRef}
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
+        >
           <div className="chat-header">
             <h3>Movie Chat</h3>
             <div className="chat-header-actions">
-              {messages.length > 0 && (
-              <button 
-                onClick={() => setShowClearConfirm(true)} 
-                className="clear-chat-btn" 
-                title="Clear chat history"
-              >
-                🗑️
-              </button>
-              )}
-              <button onClick={toggleChat}>✕</button>
+              <button onClick={toggleChat} title="Minimize">−</button>
             </div>
           </div>
                     
-          <div className="chat-messages">
-            {messages.length === 0 ? (
-              <div className="chat-welcome">
-                👋 Hi! Ask me for movie recommendations!
+          <div className="chat-messages" ref={messagesContainerRef}>
+            {showClearConfirm ? (
+              <div className="chat-confirm">
+                <p>Are you sure you want to clear your chat history? This cannot be undone.</p>
+                <div className="chat-confirm-actions">
+                  <button onClick={handleCancelClear} className="confirm-cancel-btn">
+                    Back
+                  </button>
+                  <button onClick={handleClearChat} className="confirm-delete-btn">
+                    Delete
+                  </button>
+                </div>
               </div>
             ) : (
-              messages.map((msg, idx) => (
-                <div key={idx} className={`chat-message ${msg.role}`}>
-                  {msg.content}
-                </div>
-              ))
+              <>
+                {messages.length === 0 ? (
+                  <div className="chat-welcome">
+                    👋 Hi! Ask me for movie recommendations!
+                  </div>
+                ) : (
+                  messages.map((msg, idx) => (
+                    <div key={idx} className={`chat-message ${msg.role}`}>
+                      {msg.content}
+                    </div>
+                  ))
+                )}
+                {isLoading && <div className="chat-loading">Claude is thinking...</div>}
+                <div ref={messagesEndRef} />
+              </>
             )}
-            {isLoading && <div className="chat-loading">Claude is thinking...</div>}
           </div>
 
-          <div className="chat-input">
-            <input
-              type="text"
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Ask for a movie recommendation..."
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-            />
-            <button onClick={handleSendMessage}>Send</button>
-          </div>
+          {!showClearConfirm && (
+            <div className="chat-input">
+              <input
+                type="text"
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                placeholder="Ask for a movie recommendation..."
+                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              />
+              <button onClick={handleSendMessage}>Send</button>
+              {messages.length > 0 && (
+                <button 
+                  onClick={() => setShowClearConfirm(true)} 
+                  className="clear-chat-btn"
+                  title="Clear chat history"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          )}
         </div>
-      )}
-      {showClearConfirm && (
-        <ConfirmDialog
-          message="Are you sure you want to clear your chat history? This cannot be undone."
-          onConfirm={handleClearChat}
-          onCancel={() => setShowClearConfirm(false)}
-        />
       )}
     </>
   );

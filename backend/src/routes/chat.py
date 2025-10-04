@@ -4,7 +4,6 @@ from database import db
 
 from flask import Blueprint, request, jsonify
 from anthropic import Anthropic
-
 from auth import token_required
 from models import Movie, ChatMessage
 from models.watchlist import Watchlist
