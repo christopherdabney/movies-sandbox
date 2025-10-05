@@ -1,4 +1,5 @@
 from database import db
+from sqlalchemy import and_, or_
 
 class Movie(db.Model):
     __tablename__ = 'movie'

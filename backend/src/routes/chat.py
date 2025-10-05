@@ -1,14 +1,12 @@
 from database import db
 from flask import Blueprint, request, jsonify
 from auth import token_required
-from models import Movie, ChatMessage
-from models.watchlist import Watchlist
-from sqlalchemy.orm import joinedload
+from models import ChatMessage, Movie
 from services import RecommendationsService
 
 chat_bp = Blueprint('chat', __name__, url_prefix='/chat')
 
-# Initialize chat service
+# Initialize recommendations service
 recommendations_service = RecommendationsService()
 
 @chat_bp.route('/message', methods=['POST'])
@@ -33,11 +31,15 @@ def post(member_id):
         # Get recommendation from ChatService
         result = recommendations_service.get(member_id, user_message)
         
+        # Extract movie IDs from recommendations
+        movie_ids = [rec['id'] for rec in result.get('recommendations', [])]
+        
         # Save assistant response
         assistant_chat_message = ChatMessage(
             user_id=member_id,
             role='assistant',
-            content=result['message']
+            content=result['message'],
+            recommended_movie_ids=movie_ids if movie_ids else None
         )
         db.session.add(assistant_chat_message)
         db.session.commit()
@@ -64,9 +66,23 @@ def get(member_id):
             .order_by(ChatMessage.created_at.asc())\
             .all()
         
+        # Hydrate messages with full movie data
+        result = []
+        for msg in messages:
+            msg_dict = msg.to_dict()
+            
+            # If assistant message has movie IDs, fetch full movie data
+            if msg.role == 'assistant' and msg.recommended_movie_ids:
+                movies = Movie.query.filter(Movie.id.in_(msg.recommended_movie_ids)).all()
+                msg_dict['recommendations'] = [m.to_dict() for m in movies]
+            else:
+                msg_dict['recommendations'] = []
+            
+            result.append(msg_dict)
+
         return jsonify({
-            'messages': [msg.to_dict() for msg in messages],
-            'count': len(messages)
+            'messages': result,
+            'count': len(result)
         }), 200
         
     except Exception as e:

@@ -1,10 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { API_ENDPOINTS } from '../constants/api';
+import MovieRecommendationTile from './MovieRecommendationTile';
+import type { Movie } from '../types';
 import '../styles/ChatWidget.css';
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
+  const [messages, setMessages] = useState<Array<{
+    role: 'user' | 'assistant', 
+    content: string,
+    recommendations?: Array<Movie & {reason?: string}>
+  }>>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
@@ -109,7 +115,8 @@ const ChatWidget = () => {
         const data = await response.json();
         setMessages(data.messages.map((msg: any) => ({
           role: msg.role,
-          content: msg.content
+          content: msg.content,
+          recommendations: msg.recommendations || []
         })));
       }
       setHistoryLoaded(true);
@@ -152,7 +159,11 @@ const ChatWidget = () => {
       const data = await response.json();
       
       // Add Claude's response to chat
-      const assistantMessage = { role: 'assistant' as const, content: data.message };
+      const assistantMessage = { 
+        role: 'assistant' as const, 
+        content: data.message,
+        recommendations: data.recommendations || []
+      };
       setMessages(prev => [...prev, assistantMessage]);
       
     } catch (error) {
@@ -195,7 +206,7 @@ const ChatWidget = () => {
                 <p>Are you sure you want to clear your chat history? This cannot be undone.</p>
                 <div className="chat-confirm-actions">
                   <button onClick={handleCancelClear} className="confirm-cancel-btn">
-                    Back
+                    Cancel
                   </button>
                   <button onClick={handleClearChat} className="confirm-delete-btn">
                     Delete
@@ -210,8 +221,21 @@ const ChatWidget = () => {
                   </div>
                 ) : (
                   messages.map((msg, idx) => (
-                    <div key={idx} className={`chat-message ${msg.role}`}>
-                      {msg.content}
+                    <div key={idx}>
+                      <div className={`chat-message ${msg.role}`}>
+                        {msg.content}
+                      </div>
+                      {msg.role === 'assistant' && msg.recommendations && msg.recommendations.length > 0 && (
+                        <div className="recommendations-container">
+                          {msg.recommendations.map((movie) => (
+                            <MovieRecommendationTile 
+                              key={movie.id} 
+                              movie={movie}
+                              reason={movie.reason}
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))
                 )}
@@ -227,7 +251,7 @@ const ChatWidget = () => {
                 type="text"
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                placeholder="Ask for suggestions ..."
+                placeholder="Ask for a movie recommendation..."
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               />
               <button onClick={handleSendMessage}>Send</button>

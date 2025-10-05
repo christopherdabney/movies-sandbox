@@ -1,5 +1,6 @@
 from database import db
 from datetime import datetime
+from sqlalchemy.dialects.postgresql import ARRAY
 
 class ChatMessage(db.Model):
     __tablename__ = 'chat_message'
@@ -8,6 +9,7 @@ class ChatMessage(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('member.id', ondelete='CASCADE'), nullable=False)
     role = db.Column(db.String(20), nullable=False)  # 'user' or 'assistant'
     content = db.Column(db.Text, nullable=False)
+    recommended_movie_ids = db.Column(ARRAY(db.Integer), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     
     # Relationship
@@ -20,6 +22,7 @@ class ChatMessage(db.Model):
             'userId': self.user_id,
             'role': self.role,
             'content': self.content,
+            'recommendedMovieIds': self.recommended_movie_ids if self.recommended_movie_ids else [],
             'createdAt': self.created_at.isoformat() if self.created_at else None,
         }
     
