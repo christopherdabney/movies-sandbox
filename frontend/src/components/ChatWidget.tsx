@@ -23,6 +23,15 @@ const ChatWidget = () => {
   const chatWindowRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    const handleWatchlistChange = () => {
+      loadChatHistory();
+    };
+    
+    window.addEventListener('watchlist-changed', handleWatchlistChange);
+    return () => window.removeEventListener('watchlist-changed', handleWatchlistChange);
+  }, []);
+
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -113,10 +122,12 @@ const ChatWidget = () => {
       
       if (response.ok) {
         const data = await response.json();
+        console.log('Chat history:', data.messages);  // Add this
         setMessages(data.messages.map((msg: any) => ({
           role: msg.role,
           content: msg.content,
-          recommendations: msg.recommendations || []
+          recommendations: msg.recommendations || [],
+          active: msg.active
         })));
       }
       setHistoryLoaded(true);
@@ -222,7 +233,7 @@ const ChatWidget = () => {
                 ) : (
                   messages.map((msg, idx) => (
                     <div key={idx}>
-                      <div className={`chat-message ${msg.role}`}>
+                      <div className={`chat-message ${msg.role}${msg.active === false ? ' inactive' : ''}`}>
                         {msg.content}
                       </div>
                       {msg.role === 'assistant' && msg.recommendations && msg.recommendations.length > 0 && (

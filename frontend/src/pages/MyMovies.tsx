@@ -75,6 +75,7 @@ const MyMovies: React.FC = () => {
           count: prevData.count - 1
         };
       });
+      window.dispatchEvent(new CustomEvent('watchlist-changed'));
     } catch (err) {
       console.error('Error removing from watchlist:', err);
     }

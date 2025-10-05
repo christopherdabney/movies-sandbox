@@ -3,7 +3,8 @@ from datetime import datetime
 from enum import Enum
 
 class WatchlistStatus(str, Enum):
-    QUEUED = 'queued'
+    TO_WATCH = 'to_watch'
+    WATCHING = 'watching'
     WATCHED = 'watched'
 
 class Watchlist(db.Model):
@@ -12,7 +13,11 @@ class Watchlist(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('member.id', ondelete='CASCADE'), nullable=False)
     movie_id = db.Column(db.Integer, db.ForeignKey('movie.id', ondelete='CASCADE'), nullable=False)
-    status = db.Column(db.Enum(WatchlistStatus), default=WatchlistStatus.QUEUED, nullable=False)
+    status = db.Column(
+        db.Enum(WatchlistStatus, values_callable=lambda obj: [e.value for e in obj]),
+        default=WatchlistStatus.TO_WATCH,
+        nullable=False
+    )
     added_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     watched_at = db.Column(db.DateTime, nullable=True)
     

@@ -164,6 +164,7 @@ const Movies: React.FC = () => {
               : movie
           )
         };
+        window.dispatchEvent(new CustomEvent('watchlist-changed'));
       });
     } catch (err) {
       console.error('Error adding to watchlist:', err);

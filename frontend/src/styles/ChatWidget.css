@@ -130,6 +130,15 @@
   align-self: flex-start;
 }
 
+.chat-message.inactive {
+  opacity: 0.5;
+  color: #888;
+}
+
+.chat-message.inactive .recommendations-container {
+  opacity: 0.6;
+}
+
 .chat-loading {
   color: #999;
   font-style: italic;

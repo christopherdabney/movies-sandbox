@@ -1,6 +1,7 @@
 from database import db
-from datetime import datetime
 from sqlalchemy.dialects.postgresql import ARRAY
+from datetime import datetime, timedelta
+from config import Config
 
 class ChatMessage(db.Model):
     __tablename__ = 'chat_message'
@@ -10,11 +11,27 @@ class ChatMessage(db.Model):
     role = db.Column(db.String(20), nullable=False)  # 'user' or 'assistant'
     content = db.Column(db.Text, nullable=False)
     recommended_movie_ids = db.Column(ARRAY(db.Integer), nullable=True)
+    active = db.Column(db.Boolean, nullable=False, default=True, server_default='true')
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     
     # Relationship
     member = db.relationship('Member', backref='chat_messages')
     
+    @classmethod
+    def complete_exchange(cls, user_id):
+        """Mark all active messages as inactive for a given user"""
+        cls.query.filter_by(user_id=user_id, active=True).update({'active': False})
+
+    @classmethod
+    def expire_all(cls, user_id, with_commit=False):
+        expiry_time = datetime.utcnow() - timedelta(minutes=Config.CHAT_EXPIRY_MINUTES)
+        cls.query\
+            .filter_by(user_id=user_id, active=True)\
+            .filter(cls.created_at < expiry_time)\
+            .update({'active': False})
+        if with_commit:
+            db.session.commit()
+
     def to_dict(self):
         """Convert model to dictionary for JSON serialization"""
         return {
@@ -23,6 +40,7 @@ class ChatMessage(db.Model):
             'role': self.role,
             'content': self.content,
             'recommendedMovieIds': self.recommended_movie_ids if self.recommended_movie_ids else [],
+            'active': self.active,
             'createdAt': self.created_at.isoformat() if self.created_at else None,
         }
     

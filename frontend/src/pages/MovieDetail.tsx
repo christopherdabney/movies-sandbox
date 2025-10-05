@@ -54,6 +54,7 @@ const MovieDetail = () => {
       if (!response.ok) {
         throw new Error('Failed to add to watchlist');
       }
+      window.dispatchEvent(new CustomEvent('watchlist-changed'));
       
       fetchMovie(); // Refresh to show updated watchlist status
     } catch (err) {
@@ -76,6 +77,7 @@ const MovieDetail = () => {
       if (!response.ok) {
         throw new Error('Failed to remove from watchlist');
       }
+      window.dispatchEvent(new CustomEvent('watchlist-changed'));
 
       fetchMovie(); // Refresh to show updated watchlist status
     } catch (err) {

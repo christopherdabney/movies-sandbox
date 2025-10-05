@@ -18,3 +18,7 @@ class Config:
     
     # CORS
     CORS_ORIGINS = ['http://localhost:5173']
+
+    # chat expiry pushes old chats to active=False
+    # this does not delete them, but it removes them from Claude AI api conversation context
+    CHAT_EXPIRY_MINUTES = int(os.environ.get('CHAT_EXPIRY_MINUTES', 2))

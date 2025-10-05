@@ -61,6 +61,8 @@ def post(member_id):
 def get(member_id):
     """Get chat history for the current user"""
     try:
+        ChatMessage.expire_all(member_id, with_commit=True)
+
         messages = ChatMessage.query\
             .filter_by(user_id=member_id)\
             .order_by(ChatMessage.created_at.asc())\

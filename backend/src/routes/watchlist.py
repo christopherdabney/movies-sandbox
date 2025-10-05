@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from database import db
+from models.chat_message import ChatMessage
 from models.watchlist import Watchlist, WatchlistStatus
 from sqlalchemy.orm import joinedload
 from models.movie import Movie
@@ -32,19 +33,23 @@ def post(member_id):
     if existing:
         return jsonify({'error': 'Movie already in watchlist'}), 409
     
-    # Add to watchlist
-    watchlist_item = Watchlist(
-        user_id=member_id,
-        movie_id=movie_id
-    )
-    
-    db.session.add(watchlist_item)
-    db.session.commit()
-    
-    return jsonify({
-        'message': 'Movie added to watchlist',
-        'watchlist': watchlist_item.to_dict()
-    }), 201
+    try:
+        # Add movie to watch list
+        watchlist_item = Watchlist(user_id=member_id, movie_id=movie_id)
+        db.session.add(watchlist_item)
+        
+        # Complete chat exchange within same transaction
+        ChatMessage.complete_exchange(member_id)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Movie added to watchlist',
+            'watchlist': watchlist_item.to_dict()
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 
 @watchlist_bp.route('', methods=['GET'])
@@ -87,13 +92,19 @@ def delete(member_id, movie_id):
     if not watchlist_item:
         return jsonify({'error': 'Movie not in watchlist'}), 404
     
-    db.session.delete(watchlist_item)
-    db.session.commit()
-    
-    return jsonify({
-        'message': 'Movie removed from watchlist',
-        'movieId': movie_id
-    }), 200
+    try:
+        # delete move from watch list
+        db.session.delete(watchlist_item)
+        
+        # Complete chat exchange within same transaction
+        ChatMessage.complete_exchange(member_id)
+        
+        db.session.commit()
+        
+        return jsonify({'message': 'Movie removed from watchlist'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @watchlist_bp.route('/<int:movie_id>', methods=['PATCH'])
 @token_required

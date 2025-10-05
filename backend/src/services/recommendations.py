@@ -1,10 +1,12 @@
 import os
+import re
 import json
 from anthropic import Anthropic
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
 from models import Movie
 from models.watchlist import Watchlist
+from models.chat_message import ChatMessage
 from sqlalchemy.orm import joinedload
 
 class RecommendationsService:
@@ -37,18 +39,24 @@ class RecommendationsService:
         # Get available movies (with optional filtering)
         available_movies = self._get_available_movies(user_message)
         
-        # Build context from templates
-        system_prompt = self._build_system_prompt()
-        context = self._build_context(watchlist_movies, available_movies)
+        # Build system prompt with context included
+        system_prompt = self._build_system_prompt(watchlist_movies, available_movies)
+        
+        # Fetch chat history
+        ChatMessage.expire_all(member_id, with_commit=True)
+        chat_history = self._get_chat_history(member_id)
+        
+        # Build messages array with history + current message
+        messages = chat_history + [
+            {"role": "user", "content": user_message}
+        ]
         
         # Call Claude API
         response = self.client.messages.create(
             model="claude-sonnet-4-20250514",
             max_tokens=300,
             system=system_prompt,
-            messages=[
-                {"role": "user", "content": f"{context}\n\nUser question: {user_message}"}
-            ]
+            messages=messages
         )
         
         # Parse response
@@ -62,7 +70,7 @@ class RecommendationsService:
             .all()
         
         return [
-            f"{item.movie.title} ({item.movie.release_year}) - {item.movie.genre} - {item.status}"
+            f"{item.movie.title} ({item.movie.release_year}) - {item.movie.genre} - {item.status.value}"
             for item in watchlist_items
         ]
     
@@ -80,20 +88,36 @@ class RecommendationsService:
             for m in movies
         ]
     
-    def _build_system_prompt(self):
-        """Build system prompt from template"""
+    def _build_system_prompt(self, watchlist_movies, available_movies):
+        """Build system prompt from template with context included"""
         template = self.jinja_env.get_template('system.jinja')
-        return template.render()
-    
-    def _build_context(self, watchlist_movies, available_movies):
-        """Build movie context from template"""
-        template = self.jinja_env.get_template('context.jinja')
         return template.render(
             watchlist_movies=watchlist_movies,
             available_movies=available_movies,
             watchlist_count=len(watchlist_movies),
             available_count=len(available_movies)
         )
+    
+    def _get_chat_history(self, member_id):
+        """
+        Fetch recent chat history for the user (active messages only)
+        
+        Returns:
+            list of message dicts with 'role' and 'content' keys
+        """
+        messages = ChatMessage.query\
+            .filter_by(user_id=member_id, active=True)\
+            .order_by(ChatMessage.created_at.asc())\
+            .all()
+        
+        history = []
+        for msg in messages:
+            history.append({
+                "role": msg.role,
+                "content": msg.content
+            })
+        
+        return history
     
     def _parse_response(self, response_text):
         """
@@ -102,16 +126,17 @@ class RecommendationsService:
         Returns:
             dict with 'message' and 'recommendations' keys
         """
-        try:
-            parsed = json.loads(response_text)
-            return {
-                'message': parsed.get('message', response_text),
-                'recommendations': parsed.get('recommendations', [])
-            }
-        except json.JSONDecodeError:
-            # Fallback if Claude doesn't return JSON
-            print("Claude did not return valid JSON, using raw text")
-            return {
-                'message': response_text,
-                'recommendations': []
-            }
+        # Try to extract JSON from response text
+        json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+        if json_match:
+            try:
+                parsed = json.loads(json_match.group())
+                return {
+                    'message': parsed.get('message', ''),
+                    'recommendations': parsed.get('recommendations', [])
+                }
+            except json.JSONDecodeError:
+                pass
+        
+        # Fallback
+        return {'message': response_text, 'recommendations': []}
