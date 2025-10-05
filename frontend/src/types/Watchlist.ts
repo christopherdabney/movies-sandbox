@@ -2,7 +2,7 @@ import { Movie } from './Movie';
 
 export interface WatchlistItem {
   id: number;
-  userId: number;
+  memberId: number;
   movieId: number;
   status: string;
   addedAt: string;

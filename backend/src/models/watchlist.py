@@ -11,7 +11,7 @@ class Watchlist(db.Model):
     __tablename__ = 'watchlist'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('member.id', ondelete='CASCADE'), nullable=False)
+    member_id = db.Column(db.Integer, db.ForeignKey('member.id', ondelete='CASCADE'), nullable=False)
     movie_id = db.Column(db.Integer, db.ForeignKey('movie.id', ondelete='CASCADE'), nullable=False)
     status = db.Column(
         db.Enum(WatchlistStatus, values_callable=lambda obj: [e.value for e in obj]),
@@ -29,7 +29,7 @@ class Watchlist(db.Model):
         """Convert model to dictionary for JSON serialization"""
         return {
             'id': self.id,
-            'userId': self.user_id,
+            'memberId': self.member_id,
             'movieId': self.movie_id,
             'status': self.status,
             'addedAt': self.added_at.isoformat() if self.added_at else None,
@@ -37,4 +37,4 @@ class Watchlist(db.Model):
         }
     
     def __repr__(self):
-        return f'<Watchlist user_id={self.user_id} movie_id={self.movie_id} status={self.status}>'
+        return f'<Watchlist member_id={self.member_id} movie_id={self.movie_id} status={self.status}>'

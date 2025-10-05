@@ -9,6 +9,8 @@ from models.watchlist import Watchlist
 from models.chat_message import ChatMessage
 from sqlalchemy.orm import joinedload
 
+ROLE_USER = 'user'  # move this to ChatMessage or elsewhere?
+
 class RecommendationsService:
     """Handles Claude AI interaction and response processing"""
     
@@ -19,13 +21,13 @@ class RecommendationsService:
         template_dir = Path(__file__).resolve().parent.parent / 'templates' / 'prompts'
         self.jinja_env = Environment(loader=FileSystemLoader(template_dir))
     
-    def get(self, member_id, user_message):
+    def get(self, member_id, message):
         """
         Get movie recommendation from Claude
         
         Args:
-            member_id: User's ID for fetching watchlist
-            user_message: User's question/request
+            member_id: Member's ID for fetching watchlist
+            message: Member's question/request
             
         Returns:
             dict: {
@@ -33,11 +35,11 @@ class RecommendationsService:
                 'recommendations': list of {title, year, id}
             }
         """
-        # Gather user's watchlist
+        # Gather members's watchlist
         watchlist_movies = self._get_watchlist(member_id)
         
         # Get available movies (with optional filtering)
-        available_movies = self._get_available_movies(user_message)
+        available_movies = self._get_available_movies(message)
         
         # Build system prompt with context included
         system_prompt = self._build_system_prompt(watchlist_movies, available_movies)
@@ -48,7 +50,7 @@ class RecommendationsService:
         
         # Build messages array with history + current message
         messages = chat_history + [
-            {"role": "user", "content": user_message}
+            {"role": ROLE_USER, "content": message}
         ]
         
         # Call Claude API
@@ -63,9 +65,9 @@ class RecommendationsService:
         return self._parse_response(response.content[0].text)
     
     def _get_watchlist(self, member_id):
-        """Fetch and format user's watchlist"""
+        """Fetch and format members's watchlist"""
         watchlist_items = Watchlist.query\
-            .filter_by(user_id=member_id)\
+            .filter_by(member_id=member_id)\
             .options(joinedload(Watchlist.movie))\
             .all()
         
@@ -74,9 +76,9 @@ class RecommendationsService:
             for item in watchlist_items
         ]
     
-    def _get_available_movies(self, user_message):
-        """Get available movies, optionally filtered by user message"""
-        filters = Movie.extract_filters(user_message)
+    def _get_available_movies(self, message):
+        """Get available movies, optionally filtered by message"""
+        filters = Movie.extract_filters(message)
         
         if filters['decades']:
             movies = Movie.find_by_filters(filters, limit=100)
@@ -100,13 +102,13 @@ class RecommendationsService:
     
     def _get_chat_history(self, member_id):
         """
-        Fetch recent chat history for the user (active messages only)
+        Fetch recent chat history for the member (active messages only)
         
         Returns:
             list of message dicts with 'role' and 'content' keys
         """
         messages = ChatMessage.query\
-            .filter_by(user_id=member_id, active=True)\
+            .filter_by(member_id=member_id, active=True)\
             .order_by(ChatMessage.created_at.asc())\
             .all()
         

@@ -9,34 +9,50 @@ chat_bp = Blueprint('chat', __name__, url_prefix='/chat')
 # Initialize recommendations service
 recommendations_service = RecommendationsService()
 
+ROLE_USER = 'user'  # move this to ChatMessage or elsewhere?
+
 @chat_bp.route('/message', methods=['POST'])
 @token_required
 def post(member_id):
     data = request.get_json()
-    user_message = data.get('message')
+    message = data.get('message')
     
-    if not user_message:
+    if not message:
         return jsonify({'error': 'message is required'}), 400
     
     try:
-        # Save user message
-        user_chat_message = ChatMessage(
-            user_id=member_id,
-            role='user',
-            content=user_message
+        # Save member message
+        chat_message = ChatMessage(
+            member_id=member_id,
+            role=ROLE_USER,
+            content=message
         )
-        db.session.add(user_chat_message)
+        db.session.add(chat_message)
         db.session.commit()
 
         # Get recommendation from ChatService
-        result = recommendations_service.get(member_id, user_message)
+        result = recommendations_service.get(member_id, message)
         
         # Extract movie IDs from recommendations
         movie_ids = [rec['id'] for rec in result.get('recommendations', [])]
         
+        # Hydrate recommendations with full movie data including poster_url
+        if movie_ids:
+            movies = Movie.query.filter(Movie.id.in_(movie_ids)).all()
+            # Create a map for quick lookup
+            movie_map = {m.id: m.to_dict() for m in movies}
+            # Merge with Claude's reasons
+            hydrated_recs = []
+            for rec in result.get('recommendations', []):
+                movie_data = movie_map.get(rec['id'])
+                if movie_data:
+                    movie_data['reason'] = rec.get('reason', '')
+                    hydrated_recs.append(movie_data)
+            result['recommendations'] = hydrated_recs
+
         # Save assistant response
         assistant_chat_message = ChatMessage(
-            user_id=member_id,
+            member_id=member_id,
             role='assistant',
             content=result['message'],
             recommended_movie_ids=movie_ids if movie_ids else None
@@ -59,12 +75,12 @@ def post(member_id):
 @chat_bp.route('/history', methods=['GET'])
 @token_required
 def get(member_id):
-    """Get chat history for the current user"""
+    """Get chat history for the current member"""
     try:
         ChatMessage.expire_all(member_id, with_commit=True)
 
         messages = ChatMessage.query\
-            .filter_by(user_id=member_id)\
+            .filter_by(member_id=member_id)\
             .order_by(ChatMessage.created_at.asc())\
             .all()
         
@@ -94,9 +110,9 @@ def get(member_id):
 @chat_bp.route('/clear', methods=['DELETE'])
 @token_required
 def delete(member_id):
-    """Delete all chat messages for the current user"""
+    """Delete all chat messages for the current member"""
     try:
-        ChatMessage.query.filter_by(user_id=member_id).delete()
+        ChatMessage.query.filter_by(member_id=member_id).delete()
         db.session.commit()
         
         return jsonify({

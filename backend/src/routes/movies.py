@@ -30,7 +30,7 @@ def list(member_id=None):
         movies_query = query\
             .outerjoin(Watchlist, and_(
                 Watchlist.movie_id == Movie.id,
-                Watchlist.user_id == member_id
+                Watchlist.member_id == member_id
             ))\
             .add_columns(Watchlist.id.isnot(None).label('in_watchlist'))\
             .limit(per_page)\
@@ -64,7 +64,7 @@ def get(id, member_id=None):
         result = Movie.query\
             .outerjoin(Watchlist, and_(
                 Watchlist.movie_id == Movie.id,
-                Watchlist.user_id == member_id
+                Watchlist.member_id == member_id
             ))\
             .add_columns(
                 Watchlist.id.isnot(None).label('in_watchlist'),

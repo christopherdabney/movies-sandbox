@@ -12,7 +12,7 @@ watchlist_bp = Blueprint('watchlist', __name__, url_prefix='/watchlist')
 @watchlist_bp.route('', methods=['POST'])
 @token_required
 def post(member_id):
-    """Add a movie to user's watchlist"""
+    """Add a movie to members's watchlist"""
     data = request.get_json()
     movie_id = data.get('movieId')
     
@@ -26,7 +26,7 @@ def post(member_id):
     
     # Check if already in watchlist
     existing = Watchlist.query.filter_by(
-        user_id=member_id,
+        member_id=member_id,
         movie_id=movie_id
     ).first()
     
@@ -35,7 +35,7 @@ def post(member_id):
     
     try:
         # Add movie to watch list
-        watchlist_item = Watchlist(user_id=member_id, movie_id=movie_id)
+        watchlist_item = Watchlist(member_id=member_id, movie_id=movie_id)
         db.session.add(watchlist_item)
         
         # Complete chat exchange within same transaction
@@ -55,11 +55,11 @@ def post(member_id):
 @watchlist_bp.route('', methods=['GET'])
 @token_required
 def get(member_id):
-    """Get user's watchlist with optional status filter"""
+    """Get member's watchlist with optional status filter"""
     status_filter = request.args.get('status')
     
     query = Watchlist.query\
-        .filter_by(user_id=member_id)\
+        .filter_by(member_id=member_id)\
         .options(joinedload(Watchlist.movie))  # Eager load the movie relationship
     
     # Apply status filter if provided
@@ -83,9 +83,9 @@ def get(member_id):
 @watchlist_bp.route('/<int:movie_id>', methods=['DELETE'])
 @token_required
 def delete(member_id, movie_id):
-    """Remove a movie from user's watchlist"""
+    """Remove a movie from member's watchlist"""
     watchlist_item = Watchlist.query.filter_by(
-        user_id=member_id,
+        member_id=member_id,
         movie_id=movie_id
     ).first()
     
@@ -121,7 +121,7 @@ def update(member_id, movie_id):
         return jsonify({'error': f'Invalid status. Must be one of: {[s.value for s in WatchlistStatus]}'}), 400
     
     watchlist_item = Watchlist.query.filter_by(
-        user_id=member_id,
+        member_id=member_id,
         movie_id=movie_id
     ).first()
     

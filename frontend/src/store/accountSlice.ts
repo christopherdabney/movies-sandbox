@@ -138,7 +138,7 @@ const accountSlice = createSlice({
       })
       .addCase(accountRecord.rejected, (state, action) => {
         state.loading = false
-        state.error = action.error.message || 'Failed to get account'
+        // state.error = action.error.message || 'Failed to get account'
       })
       .addCase(logoutRecord.pending, (state) => {
         state.loading = true

@@ -7,7 +7,7 @@ class ChatMessage(db.Model):
     __tablename__ = 'chat_message'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('member.id', ondelete='CASCADE'), nullable=False)
+    member_id = db.Column(db.Integer, db.ForeignKey('member.id', ondelete='CASCADE'), nullable=False)
     role = db.Column(db.String(20), nullable=False)  # 'user' or 'assistant'
     content = db.Column(db.Text, nullable=False)
     recommended_movie_ids = db.Column(ARRAY(db.Integer), nullable=True)
@@ -18,15 +18,15 @@ class ChatMessage(db.Model):
     member = db.relationship('Member', backref='chat_messages')
     
     @classmethod
-    def complete_exchange(cls, user_id):
-        """Mark all active messages as inactive for a given user"""
-        cls.query.filter_by(user_id=user_id, active=True).update({'active': False})
+    def complete_exchange(cls, member_id):
+        """Mark all active messages as inactive for a given member"""
+        cls.query.filter_by(member_id=member_id, active=True).update({'active': False})
 
     @classmethod
-    def expire_all(cls, user_id, with_commit=False):
+    def expire_all(cls, member_id, with_commit=False):
         expiry_time = datetime.utcnow() - timedelta(minutes=Config.CHAT_EXPIRY_MINUTES)
         cls.query\
-            .filter_by(user_id=user_id, active=True)\
+            .filter_by(member_id=member_id, active=True)\
             .filter(cls.created_at < expiry_time)\
             .update({'active': False})
         if with_commit:
@@ -36,7 +36,7 @@ class ChatMessage(db.Model):
         """Convert model to dictionary for JSON serialization"""
         return {
             'id': self.id,
-            'userId': self.user_id,
+            'memberId': self.member_id,
             'role': self.role,
             'content': self.content,
             'recommendedMovieIds': self.recommended_movie_ids if self.recommended_movie_ids else [],
@@ -45,4 +45,4 @@ class ChatMessage(db.Model):
         }
     
     def __repr__(self):
-        return f'<ChatMessage user_id={self.user_id} role={self.role}>'
+        return f'<ChatMessage member_id={self.member_id} role={self.role}>'
