@@ -4,16 +4,16 @@ from auth import token_required
 from models import Movie, ChatMessage
 from models.watchlist import Watchlist
 from sqlalchemy.orm import joinedload
-from services.chat_service import ChatService
+from services import RecommendationsService
 
 chat_bp = Blueprint('chat', __name__, url_prefix='/chat')
 
 # Initialize chat service
-chat_service = ChatService()
+recommendations_service = RecommendationsService()
 
 @chat_bp.route('/message', methods=['POST'])
 @token_required
-def send_message(member_id):
+def post(member_id):
     data = request.get_json()
     user_message = data.get('message')
     
@@ -31,7 +31,7 @@ def send_message(member_id):
         db.session.commit()
 
         # Get recommendation from ChatService
-        result = chat_service.get_recommendation(member_id, user_message)
+        result = recommendations_service.get(member_id, user_message)
         
         # Save assistant response
         assistant_chat_message = ChatMessage(
@@ -56,7 +56,7 @@ def send_message(member_id):
 
 @chat_bp.route('/history', methods=['GET'])
 @token_required
-def get_history(member_id):
+def get(member_id):
     """Get chat history for the current user"""
     try:
         messages = ChatMessage.query\
@@ -75,7 +75,7 @@ def get_history(member_id):
 
 @chat_bp.route('/clear', methods=['DELETE'])
 @token_required
-def clear_history(member_id):
+def delete(member_id):
     """Delete all chat messages for the current user"""
     try:
         ChatMessage.query.filter_by(user_id=member_id).delete()

@@ -7,7 +7,7 @@ from models import Movie
 from models.watchlist import Watchlist
 from sqlalchemy.orm import joinedload
 
-class ChatService:
+class RecommendationsService:
     """Handles Claude AI interaction and response processing"""
     
     def __init__(self):
@@ -17,7 +17,7 @@ class ChatService:
         template_dir = Path(__file__).resolve().parent.parent / 'templates' / 'prompts'
         self.jinja_env = Environment(loader=FileSystemLoader(template_dir))
     
-    def get_recommendation(self, member_id, user_message):
+    def get(self, member_id, user_message):
         """
         Get movie recommendation from Claude
         
@@ -110,7 +110,7 @@ class ChatService:
             }
         except json.JSONDecodeError:
             # Fallback if Claude doesn't return JSON
-            print("⚠️ Claude did not return valid JSON, using raw text")
+            print("Claude did not return valid JSON, using raw text")
             return {
                 'message': response_text,
                 'recommendations': []
