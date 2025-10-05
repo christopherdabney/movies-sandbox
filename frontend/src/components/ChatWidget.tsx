@@ -227,7 +227,7 @@ const ChatWidget = () => {
                 type="text"
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                placeholder="Ask for a movie recommendation..."
+                placeholder="Ask for suggestions ..."
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               />
               <button onClick={handleSendMessage}>Send</button>
