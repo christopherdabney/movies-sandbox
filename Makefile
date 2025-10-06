@@ -9,6 +9,10 @@ default: build-backend build-frontend
 	@echo "  Terminal 2: make react"
 	@echo ""
 
+unique:
+	@echo "Removing duplicate movies..."
+	@cd backend && source venv/bin/activate && python scripts/remove_duplicates.py
+
 posters:
 	@echo "Fetching movie posters from TMDB..."
 	@cd backend && source venv/bin/activate && python scripts/fetch_posters.py
