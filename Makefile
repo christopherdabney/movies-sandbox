@@ -24,14 +24,14 @@ posters:
 # PostgreSQL database setup
 db-setup:
 	@echo "Setting up PostgreSQL database..."
-	@createdb pagine_dev || echo "Database 'pagine_dev' already exists"
+	@createdb movies_dev || echo "Database 'movies_dev' already exists"
 	@cd backend && source venv/bin/activate && python src/db.py
 	@echo "Database setup complete"
 
 db-reset:
 	@echo "Resetting PostgreSQL database..."
-	@dropdb pagine_dev || echo "Database 'pagine_dev' doesn't exist"
-	@createdb pagine_dev
+	@dropdb movies_dev || echo "Database 'movies_dev' doesn't exist"
+	@createdb movies_dev
 	@cd backend && source venv/bin/activate && python src/db.py
 	@echo "Database reset complete"
 
@@ -40,7 +40,7 @@ populate:
 	@echo "Loading movie datasets..."
 	@for file in backend/movies/*.sql; do \
 		echo "Loading $$file..."; \
-		psql pagine_dev < "$$file"; \
+		psql movies_dev < "$$file"; \
 	done
 	@echo "Movie data loading complete"
 
@@ -95,16 +95,16 @@ test: test-backend
 # Database tools (PostgreSQL)
 db-users:
 	@echo "Viewing all users in PostgreSQL database:"
-	@psql pagine_dev -c "SELECT id, email, first_name, last_name, created_at FROM member ORDER BY created_at DESC;"
+	@psql movies_dev -c "SELECT id, email, first_name, last_name, created_at FROM member ORDER BY created_at DESC;"
 
 # Database tools (PostgreSQL)
 db-movies:
 	@echo "Viewing all movies in PostgreSQL database:"
-	@psql pagine_dev -c "SELECT * FROM movie;"
+	@psql movies_dev -c "SELECT * FROM movie;"
 
 db-shell:
-	@echo "Opening PostgreSQL shell for 'pagine_dev' database:"
-	@psql pagine_dev
+	@echo "Opening PostgreSQL shell for 'movies_dev' database:"
+	@psql movies_dev
 
 db-test:
 	@echo "Testing database connection..."
@@ -120,7 +120,7 @@ clean:
 
 clean-db:
 	@echo "Dropping PostgreSQL database..."
-	@dropdb pagine_dev
+	@dropdb movies_dev
 
 full-clean: clean clean-db
 	@echo "Full clean complete"

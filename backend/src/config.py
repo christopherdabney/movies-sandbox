@@ -9,7 +9,7 @@ class Config:
         f"{os.getenv('DB_PASSWORD', '')}@"
         f"{os.getenv('DB_HOST', 'localhost')}:"
         f"{os.getenv('DB_PORT', '5432')}/"
-        f"{os.getenv('DB_NAME', 'pagine_dev')}"
+        f"{os.getenv('DB_NAME', 'movies_dev')}"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     

@@ -15,7 +15,7 @@ TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500'
 def connect_db():
     return psycopg2.connect(
         host=os.getenv('DB_HOST', 'localhost'),
-        database=os.getenv('DB_NAME', 'pagine_dev'),
+        database=os.getenv('DB_NAME', 'movies_dev'),
         user=os.getenv('DB_USER', os.getenv('USER')),
         password=os.getenv('DB_PASSWORD', ''),
         port=os.getenv('DB_PORT', '5432')
