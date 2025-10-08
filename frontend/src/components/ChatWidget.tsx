@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { API_ENDPOINTS } from '../constants/api';
 import MovieRecommendationTile from './MovieRecommendationTile';
+import { useSelector } from 'react-redux';
+import LoginPrompt from './LoginPrompt';
+import type { RootState } from '../store/store';
 import type { Movie } from '../types';
 import '../styles/ChatWidget.css';
 
@@ -22,6 +25,9 @@ const ChatWidget = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatWindowRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  const { account } = useSelector((state: RootState) => state.account);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   useEffect(() => {
     const handleWatchlistChange = () => {
@@ -154,6 +160,10 @@ useEffect(() => {
   };
 
   const toggleChat = () => {
+    if (!account) {
+      setShowLoginPrompt(true);
+      return;
+    }
     if (showClearConfirm) {
       setShowClearConfirm(false);
     }
@@ -212,7 +222,7 @@ useEffect(() => {
   return (
     <>
       {/* Chat window */}
-      {isOpen ? (
+      {isOpen && (
         <div 
           className="chat-window" 
           ref={chatWindowRef}
@@ -300,11 +310,14 @@ useEffect(() => {
             </div>
           )}
         </div>
-      ) : (
-        /* Floating chat button */
+      )}
+      {!isOpen && !showLoginPrompt && (
         <button className="chat-button" onClick={toggleChat}>
           💬
         </button>
+      )}
+      {showLoginPrompt && (
+        <LoginPrompt onClose={() => setShowLoginPrompt(false)} />
       )}
     </>
   );
