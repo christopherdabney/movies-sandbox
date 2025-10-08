@@ -9,6 +9,10 @@ default: build-backend build-frontend
 	@echo "  Terminal 2: make react"
 	@echo ""
 
+movies:
+	@echo "Starting TMDB movie fetcher..."
+	@cd backend && source venv/bin/activate && python scripts/tmdb_fetch.py
+
 unique:
 	@echo "Removing duplicate movies..."
 	@cd backend && source venv/bin/activate && python scripts/remove_duplicates.py
