@@ -41,17 +41,30 @@ const ChatWidget = () => {
   }, [isOpen, messages]);
 
   // Prevent background scroll when hovering over chat
-  useEffect(() => {
-    if (isHovering) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
+useEffect(() => {
+  if (isHovering) {
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.overflow = 'hidden';
+    document.body.style.paddingRight = `${scrollbarWidth}px`;
+    // Also shift the chat widget
+    if (chatWindowRef.current) {
+      chatWindowRef.current.style.right = `${20 + scrollbarWidth}px`;
     }
-    
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isHovering]);
+  } else {
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+    if (chatWindowRef.current) {
+      chatWindowRef.current.style.right = '20px';
+    }
+  }
+  return () => {
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+    if (chatWindowRef.current) {
+      chatWindowRef.current.style.right = '20px';
+    }
+  };
+}, [isHovering]);
 
   // Prevent scroll propagation from messages container
   useEffect(() => {
@@ -198,13 +211,8 @@ const ChatWidget = () => {
 
   return (
     <>
-      {/* Floating chat button */}
-      <button className="chat-button" onClick={toggleChat}>
-        💬
-      </button>
-
       {/* Chat window */}
-      {isOpen && (
+      {isOpen ? (
         <div 
           className="chat-window" 
           ref={chatWindowRef}
@@ -292,6 +300,11 @@ const ChatWidget = () => {
             </div>
           )}
         </div>
+      ) : (
+        /* Floating chat button */
+        <button className="chat-button" onClick={toggleChat}>
+          💬
+        </button>
       )}
     </>
   );

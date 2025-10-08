@@ -23,10 +23,10 @@
 /* Chat window */
 .chat-window {
   position: fixed;
-  bottom: 90px;
+  bottom: 20px;
   right: 20px;
   width: 380px;
-  height: 500px;
+  height: 570px;
   max-height: calc(100vh - 110px);
   background: white;
   border-radius: 12px;
