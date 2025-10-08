@@ -34,8 +34,11 @@ const ChatWidget = () => {
 
   // Scroll to bottom when messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    // Only scroll if opening the chat and there are messages
+    if (isOpen && messages.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [isOpen, messages]);
 
   // Prevent background scroll when hovering over chat
   useEffect(() => {
@@ -122,7 +125,7 @@ const ChatWidget = () => {
       
       if (response.ok) {
         const data = await response.json();
-        console.log('Chat history:', data.messages);  // Add this
+        console.log('Chat history:', data.messages);
         setMessages(data.messages.map((msg: any) => ({
           role: msg.role,
           content: msg.content,
@@ -142,6 +145,10 @@ const ChatWidget = () => {
       setShowClearConfirm(false);
     }
     setIsOpen(!isOpen);
+    if (isOpen) {
+      // Closing chat, ensure scroll lock is reset
+      setIsHovering(false);
+    }
   };
 
   const handleSendMessage = async () => {
@@ -258,23 +265,30 @@ const ChatWidget = () => {
 
           {!showClearConfirm && (
             <div className="chat-input">
-              <input
-                type="text"
+              <textarea
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 placeholder="Ask for a movie recommendation..."
-                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+                rows={2}
               />
-              <button onClick={handleSendMessage}>Send</button>
-              {messages.length > 0 && (
-                <button 
-                  onClick={() => setShowClearConfirm(true)} 
-                  className="clear-chat-btn"
-                  title="Clear chat history"
-                >
-                  Clear
-                </button>
-              )}
+              <div className="chat-input-buttons">
+                <button onClick={handleSendMessage} className="send-btn">Send</button>
+                {messages.length > 0 && (
+                  <button 
+                    onClick={() => setShowClearConfirm(true)} 
+                    className="clear-chat-btn"
+                    title="Clear chat history"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>
