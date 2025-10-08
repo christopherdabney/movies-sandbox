@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom'
 import { accountRecord } from '../store/accountSlice'
 import type { AppDispatch, RootState } from '../store/store'
 import { API_ENDPOINTS } from '../constants/api'
+import { WatchlistFilterValue } from '../types/Watchlist';
+import type { WatchlistFilter } from '../types/Watchlist';
 import './../styles/Home.css'
 
 interface WatchlistStats {
@@ -20,8 +22,7 @@ function Home() {
   const [stats, setStats] = useState<WatchlistStats>({
     total: 0,
     toWatch: 0,
-    watched: 0,
-    watching: 0
+    watched: 0
   });
   const [statsLoading, setStatsLoading] = useState(true);
 
@@ -48,29 +49,22 @@ function Home() {
         });
         const allData = await allResponse.json();
         
-        // Fetch to_watch items
-        const toWatchResponse = await fetch(`${API_ENDPOINTS.WATCHLIST.LIST}?status=to_watch`, {
+        // Fetch queued items
+        const toWatchResponse = await fetch(`${API_ENDPOINTS.WATCHLIST.LIST}?status=${WatchlistFilterValue.QUEUED}`, {
           credentials: 'include',
         });
         const toWatchData = await toWatchResponse.json();
         
         // Fetch watched items
-        const watchedResponse = await fetch(`${API_ENDPOINTS.WATCHLIST.LIST}?status=watched`, {
+        const watchedResponse = await fetch(`${API_ENDPOINTS.WATCHLIST.LIST}?status=${WatchlistFilterValue.WATCHED}`, {
           credentials: 'include',
         });
         const watchedData = await watchedResponse.json();
-        
-        // Fetch watching items
-        const watchingResponse = await fetch(`${API_ENDPOINTS.WATCHLIST.LIST}?status=watching`, {
-          credentials: 'include',
-        });
-        const watchingData = await watchingResponse.json();
-        
+
         setStats({
           total: allData.count || 0,
           toWatch: toWatchData.count || 0,
           watched: watchedData.count || 0,
-          watching: watchingData.count || 0,
         });
       } catch (error) {
         console.error('Error fetching stats:', error);
@@ -104,11 +98,6 @@ function Home() {
           <div className="stat-card">
             <div className="stat-number">{stats.toWatch}</div>
             <div className="stat-label">To Watch</div>
-          </div>
-          
-          <div className="stat-card">
-            <div className="stat-number">{stats.watching}</div>
-            <div className="stat-label">Watching</div>
           </div>
           
           <div className="stat-card">

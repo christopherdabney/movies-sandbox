@@ -134,8 +134,8 @@ const MyMovies: React.FC = () => {
           All ({watchlistData?.count || 0})
         </button>
         <button
-          className={`filter-tab ${activeFilter === WatchlistFilterValue.TO_WATCH ? 'active' : ''}`}
-          onClick={() => handleFilterChange(WatchlistFilterValue.TO_WATCH)}
+          className={`filter-tab ${activeFilter === WatchlistFilterValue.QUEUED ? 'active' : ''}`}
+          onClick={() => handleFilterChange(WatchlistFilterValue.QUEUED)}
         >
           To Watch
         </button>

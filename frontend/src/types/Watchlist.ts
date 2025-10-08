@@ -17,14 +17,14 @@ export interface WatchlistResponse {
 
 // Enum for valid backend watchlist status values
 export enum WatchlistStatus {
-  TO_WATCH = 'to_watch',
+  QUEUED = 'queued',
   WATCHED = 'watched',
 }
 
 // Constant object for using filter values in code
 export const WatchlistFilterValue = {
   ALL: 'all',
-  TO_WATCH: WatchlistStatus.TO_WATCH,
+  QUEUED: WatchlistStatus.QUEUED,
   WATCHED: WatchlistStatus.WATCHED,
 } as const;
 

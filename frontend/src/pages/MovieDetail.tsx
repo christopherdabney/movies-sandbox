@@ -5,6 +5,7 @@ import { API_ENDPOINTS } from '../constants/api';
 import type { RootState } from '../store/store';
 import type { Movie } from '../types';
 import LoginPrompt from '../components/LoginPrompt';
+import { WatchlistFilterValue } from '../types/Watchlist';
 import '../styles/MovieDetail.css';
 
 const MovieDetail = () => {
@@ -136,7 +137,11 @@ const MovieDetail = () => {
           {movie.inWatchlist && (
             <div className="watchlist-actions">
               <div className="watchlist-status">
-                {movie.watchlistStatus === 'watched' ? '✓ Watched' : 'In Watchlist'}
+                {
+                  movie.watchlistStatus === WatchlistFilterValue.WATCHED 
+                    ? '✓ Watched' 
+                    : 'In Watchlist'
+                }
               </div>
               <button onClick={handleRemoveFromWatchlist} className="remove-btn">
                 Remove

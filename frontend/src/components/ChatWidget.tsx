@@ -144,7 +144,6 @@ useEffect(() => {
       
       if (response.ok) {
         const data = await response.json();
-        console.log('Chat history:', data.messages);
         setMessages(data.messages.map((msg: any) => ({
           role: msg.role,
           content: msg.content,

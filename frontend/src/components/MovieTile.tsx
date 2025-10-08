@@ -67,7 +67,7 @@ const MovieTile: React.FC<MovieTileProps> = ({
             >
               Remove
             </button>
-            {watchlistStatus === WatchlistFilterValue.TO_WATCH && (
+            {watchlistStatus === WatchlistFilterValue.QUEUED && (
               <button 
                 className="mark-watched-btn"
                 onClick={e => {
