@@ -1,25 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { API_ENDPOINTS } from '../constants/api';
 import MovieTile from '../components/MovieTile';
+import type { WatchlistResponse, WatchlistFilter } from '../types/Watchlist';
+import { WatchlistFilterValue } from '../types/Watchlist';
 
-import type { Movie, WatchlistItem, WatchlistResponse } from '../types';
 import '../styles/MyMovies.css';
 
 const MyMovies: React.FC = () => {
   const [watchlistData, setWatchlistData] = useState<WatchlistResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'queued' | 'watched'>('all');
+  const [activeFilter, setActiveFilter] = useState<WatchlistFilter>(WatchlistFilterValue.ALL);
 
   const fetchWatchlist = async (status?: string) => {
     setLoading(true);
     setError(null);
-    
     try {
       const url = status 
         ? `${API_ENDPOINTS.WATCHLIST.LIST}?status=${status}`
         : API_ENDPOINTS.WATCHLIST.LIST;
-        
       const response = await fetch(url, {
         method: 'GET',
         credentials: 'include',
@@ -27,11 +26,9 @@ const MyMovies: React.FC = () => {
           'Content-Type': 'application/json',
         },
       });
-
       if (!response.ok) {
         throw new Error(`Failed to fetch watchlist: ${response.status}`);
       }
-      
       const data: WatchlistResponse = await response.json();
       setWatchlistData(data);
     } catch (err) {
@@ -45,9 +42,9 @@ const MyMovies: React.FC = () => {
     fetchWatchlist();
   }, []);
 
-  const handleFilterChange = (filter: 'all' | 'queued' | 'watched') => {
+  const handleFilterChange = (filter: WatchlistFilter) => {
     setActiveFilter(filter);
-    if (filter === 'all') {
+    if (filter === WatchlistFilterValue.ALL) {
       fetchWatchlist();
     } else {
       fetchWatchlist(filter);
@@ -60,15 +57,11 @@ const MyMovies: React.FC = () => {
         method: 'DELETE',
         credentials: 'include',
       });
-
       if (!response.ok) {
         throw new Error('Failed to remove from watchlist');
       }
-
-      // Remove from local state
       setWatchlistData(prevData => {
         if (!prevData) return prevData;
-        
         return {
           ...prevData,
           watchlist: prevData.watchlist.filter(item => item.movieId !== movieId),
@@ -89,22 +82,18 @@ const MyMovies: React.FC = () => {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ status: 'watched' }),
+        body: JSON.stringify({ status: WatchlistFilterValue.WATCHED }),
       });
-
       if (!response.ok) {
         throw new Error('Failed to update watchlist');
       }
-
-      // Update local state
       setWatchlistData(prevData => {
         if (!prevData) return prevData;
-        
         return {
           ...prevData,
           watchlist: prevData.watchlist.map(item => 
             item.movieId === movieId 
-              ? { ...item, status: 'watched', watchedAt: new Date().toISOString() }
+              ? { ...item, status: WatchlistFilterValue.WATCHED, watchedAt: new Date().toISOString() }
               : item
           )
         };
@@ -139,30 +128,29 @@ const MyMovies: React.FC = () => {
       {/* Filter tabs */}
       <div className="filter-tabs">
         <button
-          className={`filter-tab ${activeFilter === 'all' ? 'active' : ''}`}
-          onClick={() => handleFilterChange('all')}
+          className={`filter-tab ${activeFilter === WatchlistFilterValue.ALL ? 'active' : ''}`}
+          onClick={() => handleFilterChange(WatchlistFilterValue.ALL)}
         >
           All ({watchlistData?.count || 0})
         </button>
         <button
-          className={`filter-tab ${activeFilter === 'queued' ? 'active' : ''}`}
-          onClick={() => handleFilterChange('queued')}
+          className={`filter-tab ${activeFilter === WatchlistFilterValue.TO_WATCH ? 'active' : ''}`}
+          onClick={() => handleFilterChange(WatchlistFilterValue.TO_WATCH)}
         >
           To Watch
         </button>
         <button
-          className={`filter-tab ${activeFilter === 'watched' ? 'active' : ''}`}
-          onClick={() => handleFilterChange('watched')}
+          className={`filter-tab ${activeFilter === WatchlistFilterValue.WATCHED ? 'active' : ''}`}
+          onClick={() => handleFilterChange(WatchlistFilterValue.WATCHED)}
         >
           Watched
         </button>
       </div>
-
       {/* Movies grid */}
       {!watchlistData || watchlistData.count === 0 ? (
         <div className="empty-state">
           <div className="empty-text">
-            {activeFilter === 'all' 
+            {activeFilter === WatchlistFilterValue.ALL 
               ? "You haven't added any movies to your watchlist yet."
               : `No ${activeFilter} movies in your watchlist.`}
           </div>

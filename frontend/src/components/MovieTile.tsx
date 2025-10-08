@@ -1,12 +1,14 @@
 import React from 'react';
 import type { Movie } from '../types';
 import { useNavigate } from 'react-router-dom';
+import type { WatchlistFilter } from '../types/Watchlist';
+import { WatchlistFilterValue } from '../types/Watchlist';
 import '../styles/MovieTile.css';
 
 interface MovieTileProps {
   movie: Movie;
   onAddToWatchlist?: (movieId: number) => void;
-  watchlistStatus?: string;
+  watchlistStatus?: WatchlistFilter;
   onRemoveFromWatchlist?: (movieId: number) => void;
   onMarkAsWatched?: (movieId: number) => void;
 }
@@ -65,7 +67,7 @@ const MovieTile: React.FC<MovieTileProps> = ({
             >
               Remove
             </button>
-            {watchlistStatus === 'queued' && (
+            {watchlistStatus === WatchlistFilterValue.TO_WATCH && (
               <button 
                 className="mark-watched-btn"
                 onClick={e => {
@@ -76,7 +78,7 @@ const MovieTile: React.FC<MovieTileProps> = ({
                 Mark Watched
               </button>
             )}
-            {watchlistStatus === 'watched' && (
+            {watchlistStatus === WatchlistFilterValue.WATCHED && (
               <span className="watched-badge">✓ Watched</span>
             )}
           </div>
