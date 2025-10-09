@@ -1,4 +1,5 @@
 import os
+import random
 import requests
 import psycopg2
 from time import sleep
@@ -10,6 +11,14 @@ load_dotenv()
 TMDB_API_KEY = os.getenv('TMDB_API_KEY')
 BASE_URL = 'https://api.themoviedb.org/3'
 IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500'
+
+# Map choice to endpoint
+category_map = {
+    '1': 'popular',
+    '2': 'top_rated',
+    '3': 'now_playing',
+    '4': 'upcoming'
+}
 
 def connect_db():
     """Connect to PostgreSQL database"""
@@ -57,7 +66,7 @@ def insert_movie(cursor, conn, movie):
         print(f"    ✗ Error inserting movie: {e}")
         return None
 
-def fetch_movies(num_movies=10):
+def fetch_movies(num_movies=10, category="popular"):
     """Fetch popular movies from TMDB API"""
     movies = []
     pages_needed = (num_movies // 20) + 1
@@ -65,8 +74,11 @@ def fetch_movies(num_movies=10):
     print(f"\nFetching {num_movies} movies from TMDB...")
     print("-" * 80)
     
-    for page in range(1, pages_needed + 1):
-        url = f"{BASE_URL}/movie/popular"
+    # Generate unique random page numbers
+    random_pages = random.sample(range(1, 501), pages_needed)  # TMDB has ~500 pages
+
+    for page in random_pages:
+        url = f"{BASE_URL}/movie/{category}"
         params = {
             'api_key': TMDB_API_KEY,
             'page': page,
@@ -186,13 +198,29 @@ def main():
             print("✗ Please enter a valid number")
             continue
         
+        # Category selection
+        print("\nSelect movie category:")
+        print("1) Popular")
+        print("2) Top Rated")
+        print("3) Now Playing")
+        print("4) Upcoming")
+
+        while True:
+            category_choice = input("Enter choice (1-4, default 1): ").strip()
+            category_choice = category_choice if category_choice else "1"
+            
+            if category_choice in ['1', '2', '3', '4']:
+                break
+            print("Invalid choice. Please enter 1, 2, 3, or 4")
+        category = category_map[category_choice]
+
         # Fetch movies
-        movies = fetch_movies(num_movies)
+        movies = fetch_movies(num_movies, category)
         
         if not movies:
             print("✗ No movies fetched")
             break
-        
+
         # Display results
         display_movies(movies)
         
