@@ -81,15 +81,17 @@ class RecommendationsService:
     def _get_available_movies(self, message, member_id):
         """Get available movies, optionally filtered by message"""
         filters = extract_filters(message)
-        
-        if filters['decades']:
-            movies = Movie.find_by_filters(filters, limit=100)
-        else:
-            movies = Movie.query.limit(100).all()
-        
+
         member = Member.query.get(member_id)
         allowed_ratings = get_allowable_ratings(member.calculate_age())
-        movies = [m for m in movies if m.rating in allowed_ratings]
+
+        # Build query with age filter
+        MAX_FILMS = 100
+        if filters['decades']:
+            movies = Movie.find_by_filters(filters, limit=MAX_FILMS, allowed_ratings=allowed_ratings)
+        else:
+            movies = Movie.query.filter(Movie.rating.in_(allowed_ratings)).limit(MAX_FILMS).all()
+    
 
         return [
             f"{m.title} ({m.release_year}) - {m.genre} - ID:{m.id}"

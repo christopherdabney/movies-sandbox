@@ -2,10 +2,12 @@ from flask import Blueprint, request, jsonify
 from database import db
 from models.chat_message import ChatMessage
 from models.watchlist import Watchlist, WatchlistStatus
+from models.member import Member
 from sqlalchemy.orm import joinedload
 from models.movie import Movie
 from auth import token_required
 from datetime import datetime
+from utils.movies import get_allowable_ratings
 
 watchlist_bp = Blueprint('watchlist', __name__, url_prefix='/watchlist')
 
@@ -24,12 +26,13 @@ def post(member_id):
     if not movie:
         return jsonify({'error': 'Movie not found'}), 404
     
+    member = Member.query.get(member_id)
+    allowed_ratings = get_allowable_ratings(member.calculate_age())
+    if not movie.rating in allowed_ratings:
+        return jsonify({'error': 'Movie not found'}), 404
+
     # Check if already in watchlist
-    existing = Watchlist.query.filter_by(
-        member_id=member_id,
-        movie_id=movie_id
-    ).first()
-    
+    existing = Watchlist.query.filter_by(member_id=member_id, movie_id=movie_id).first()
     if existing:
         return jsonify({'error': 'Movie already in watchlist'}), 409
     

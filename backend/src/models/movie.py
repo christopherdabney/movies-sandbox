@@ -36,13 +36,14 @@ class Movie(db.Model):
         return f'<Movie {self.title} ({self.release_year})>'
     
     @staticmethod
-    def find_by_filters(filters, limit=100):
+    def find_by_filters(filters, limit=100, allowed_ratings=None):
         """
         Get movies filtered by decade
         
         Args:
             filters: dict with 'decades' key
             limit: maximum number of movies to return
+            allowed_ratings: ratings, set by age filter, of movies to include
         
         Returns:
             List of Movie objects
@@ -58,4 +59,8 @@ class Movie(db.Model):
                 )
             query = query.filter(or_(*decade_conditions))
         
+        # Add rating filter
+        if allowed_ratings:
+            query = query.filter(Movie.rating.in_(allowed_ratings))
+
         return query.limit(limit).all()
