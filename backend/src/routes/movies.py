@@ -2,6 +2,8 @@ from flask import Blueprint, request, jsonify
 from auth import token_optional
 from models import Movie
 from models.watchlist import Watchlist
+from models.member import Member
+from utils.movies import get_allowable_ratings
 from sqlalchemy import and_
 
 movies_bp = Blueprint('movies', __name__, url_prefix='/movies')
@@ -26,6 +28,12 @@ def list(member_id=None):
     # Manual LIMIT/OFFSET with SQLAlchemy
     movies_list = []
     if member_id:
+        member = Member.query.get(member_id)
+        age = member.calculate_age()
+        query = query.filter(Movie.rating.in_(
+            get_allowable_ratings(age))
+        )
+
         # Query movies with LEFT JOIN to watchlist
         movies_query = query\
             .outerjoin(Watchlist, and_(

@@ -4,11 +4,12 @@ import json
 from anthropic import Anthropic
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
-from models import Movie
+from models import Movie, Member
 from models.watchlist import Watchlist
 from models.chat_message import ChatMessage
 from sqlalchemy.orm import joinedload
 from utils.movies import extract_filters
+from utils.movies import get_allowable_ratings
 
 ROLE_USER = 'user'  # move this to ChatMessage or elsewhere?
 
@@ -40,7 +41,7 @@ class RecommendationsService:
         watchlist_movies = self._get_watchlist(member_id)
         
         # Get available movies (with optional filtering)
-        available_movies = self._get_available_movies(message)
+        available_movies = self._get_available_movies(message, member_id)
         
         # Build system prompt with context included
         system_prompt = self._build_system_prompt(watchlist_movies, available_movies)
@@ -77,7 +78,7 @@ class RecommendationsService:
             for item in watchlist_items
         ]
     
-    def _get_available_movies(self, message):
+    def _get_available_movies(self, message, member_id):
         """Get available movies, optionally filtered by message"""
         filters = extract_filters(message)
         
@@ -86,6 +87,10 @@ class RecommendationsService:
         else:
             movies = Movie.query.limit(100).all()
         
+        member = Member.query.get(member_id)
+        allowed_ratings = get_allowable_ratings(member.calculate_age())
+        movies = [m for m in movies if m.rating in allowed_ratings]
+
         return [
             f"{m.title} ({m.release_year}) - {m.genre} - ID:{m.id}"
             for m in movies

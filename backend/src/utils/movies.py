@@ -1,3 +1,22 @@
+RATING_AGE_REQUIREMENTS = {
+    'G': 0,
+    'PG': 0,
+    'PG-13': 13,
+    'R': 17,
+    'NC-17': 18
+}
+
+def can_watch_rating(member_age, movie_rating):
+    """Check if member age meets rating requirement"""
+    return member_age >= RATING_AGE_REQUIREMENTS.get(movie_rating, 18)
+
+def get_allowable_ratings(age):
+    return [
+        rating 
+        for rating, min_age in RATING_AGE_REQUIREMENTS.items()
+        if age >= min_age
+    ]
+
 def extract_filters(user_message):
     """
     Extract decade filters from user message
@@ -33,15 +52,3 @@ def extract_filters(user_message):
     return {
         'decades': detected_decades
     }
-
-RATING_AGE_REQUIREMENTS = {
-    'G': 0,
-    'PG': 0,
-    'PG-13': 13,
-    'R': 17,
-    'NC-17': 18
-}
-
-def can_watch_rating(member_age, movie_rating):
-    """Check if member age meets rating requirement"""
-    return member_age >= RATING_AGE_REQUIREMENTS.get(movie_rating, 18)
