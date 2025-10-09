@@ -3,6 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from auth import token_required, add_token, remove_token, hash_password, check_password
 from database import db
 from models import Member
+from datetime import date
 
 membership_bp = Blueprint('membership', __name__, url_prefix='/member')
 
@@ -39,14 +40,17 @@ def logout():
 @membership_bp.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
-    
+    # Parse date_of_birth from ISO format string (YYYY-MM-DD)
+    date_of_birth = date.fromisoformat(data.get('dateOfBirth'))
+
     try:
         # Create new member using SQLAlchemy
         new_member = Member(
             email=data.get('email'),
             password_hash=hash_password(data.get('password')),
             first_name=data.get('firstName'),
-            last_name=data.get('lastName')
+            last_name=data.get('lastName'),
+            date_of_birth=date_of_birth,
         )
         
         # Add and commit to database

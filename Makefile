@@ -142,6 +142,14 @@ vc:
 	@echo "Testing Claude API connection..."
 	@cd backend && source venv/bin/activate && python scripts/verify_claude.py
 
+migrate:
+	cd backend && . venv/bin/activate && \
+	export FLASK_APP=src/app.py && flask db migrate -m "$(msg)"
+
+upgrade:
+	cd backend && . venv/bin/activate && \
+	export FLASK_APP=src/app.py && flask db upgrade
+
 # Show clean project structure
 tree:
 	tree -I 'node_modules|venv|__pycache__|*.pyc|*.db'

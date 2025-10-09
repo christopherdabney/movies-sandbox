@@ -42,7 +42,7 @@ const MovieTile: React.FC<MovieTileProps> = ({
       )}
       <div className="movie-info">
         <h3 className="movie-title">{movie.title}</h3>
-        <p className="movie-year">{movie.release_year}</p>
+        <p className="movie-year">{movie.release_year}{movie.rating && <>{' '}| Rating: {movie.rating}</>}</p>
         <p className="movie-genre">{movie.genre}</p>
         {
             !movie.inWatchlist && onAddToWatchlist && (

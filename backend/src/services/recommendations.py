@@ -8,6 +8,7 @@ from models import Movie
 from models.watchlist import Watchlist
 from models.chat_message import ChatMessage
 from sqlalchemy.orm import joinedload
+from utils.movies import extract_filters
 
 ROLE_USER = 'user'  # move this to ChatMessage or elsewhere?
 
@@ -78,7 +79,7 @@ class RecommendationsService:
     
     def _get_available_movies(self, message):
         """Get available movies, optionally filtered by message"""
-        filters = Movie.extract_filters(message)
+        filters = extract_filters(message)
         
         if filters['decades']:
             movies = Movie.find_by_filters(filters, limit=100)

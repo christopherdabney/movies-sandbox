@@ -14,13 +14,16 @@ function Register() {
     password: '',
     firstName: '',
     lastName: '',
+    birthMonth: '',
+    birthDay: '',
+    birthYear: ''
   })
 
   useEffect(() => {
       dispatch(clearError());
   }, [dispatch]);
 
-  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInput = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -30,12 +33,14 @@ function Register() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const dateOfBirth = `${formData.birthYear}-${formData.birthMonth}-${formData.birthDay}`;
     try {
       await dispatch(registerRecord({
         email: formData.email,
         password: formData.password,
         firstName: formData.firstName,
-        lastName: formData.lastName
+        lastName: formData.lastName,
+        dateOfBirth: dateOfBirth
       })).unwrap()
       navigate('/home', { replace: true })
     } catch (err) {
@@ -95,6 +100,69 @@ function Register() {
                 className="form-input"
                 required
               />
+            </div>
+          </div>
+
+          <div className="form-group-row">
+            <div className="form-group-third">
+              <label className="form-label">Birth Month</label>
+              <select
+                name="birthMonth"
+                value={formData.birthMonth}
+                onChange={handleInput}
+                className="form-select"
+                required
+              >
+                <option value="">Month</option>
+                <option value="01">January</option>
+                <option value="02">February</option>
+                <option value="03">March</option>
+                <option value="04">April</option>
+                <option value="05">May</option>
+                <option value="06">June</option>
+                <option value="07">July</option>
+                <option value="08">August</option>
+                <option value="09">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+            </div>
+            
+            <div className="form-group-third">
+              <label className="form-label">Day</label>
+              <select
+                name="birthDay"
+                value={formData.birthDay}
+                onChange={handleInput}
+                className="form-select"
+                required
+              >
+                <option value="">Day</option>
+                {Array.from({length: 31}, (_, i) => i + 1).map(day => (
+                  <option key={day} value={day.toString().padStart(2, '0')}>
+                    {day}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="form-group-third">
+              <label className="form-label">Year</label>
+              <select
+                name="birthYear"
+                value={formData.birthYear}
+                onChange={handleInput}
+                className="form-select"
+                required
+              >
+                <option value="">Year</option>
+                {Array.from({length: 125}, (_, i) => new Date().getFullYear() - i).map(year => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

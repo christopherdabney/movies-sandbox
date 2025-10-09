@@ -88,6 +88,10 @@ function Home() {
         <h1 className="welcome-message">
           {account.firstName} {account.lastName}
         </h1>
+
+        <div>
+          Age: {account.age}
+        </div>
         
         <div className="stats-container">
           <div className="stat-card">
