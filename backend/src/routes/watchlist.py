@@ -10,6 +10,7 @@ from datetime import datetime
 from utils.movies import get_allowable_ratings, get_rating, age_unlocks_ratings
 from sqlalchemy.sql import func
 from models.movie import Movie
+from services import RecommendationsService, RecommendationTrigger
 
 watchlist_bp = Blueprint('watchlist', __name__, url_prefix='/watchlist')
 
@@ -178,13 +179,12 @@ def overview(member_id):
             reason = f"Happy Birthday! {rating} movies have been unlocked!"
         else:
             reason = f"You are now able to browse {rating} movies."
-        total_films = 6
-        random_movies = Movie.query\
-            .filter_by(rating=rating)\
-            .order_by(func.random())\
-            .limit(total_films)\
-            .all()
-        serialized_movies = [movie.to_dict() for movie in random_movies]
+        rs = RecommendationsService(member_id)
+        result = rs.get(
+            trigger=RecommendationTrigger.RATING_UNLOCK, 
+            params={'rating': rating}
+        )
+        serialized_movies = result.get('recommendations', [])
     else:
         queued_movies = Watchlist.query\
             .filter_by(member_id=member.id, status=WatchlistStatus.QUEUED)\

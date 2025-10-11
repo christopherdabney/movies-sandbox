@@ -2,12 +2,9 @@ from database import db
 from flask import Blueprint, request, jsonify
 from auth import token_required
 from models import ChatMessage, Movie
-from services import RecommendationsService
+from services import RecommendationsService, RecommendationTrigger
 
 chat_bp = Blueprint('chat', __name__, url_prefix='/chat')
-
-# Initialize recommendations service
-recommendations_service = RecommendationsService()
 
 ROLE_USER = 'user'  # move this to ChatMessage or elsewhere?
 
@@ -31,7 +28,8 @@ def post(member_id):
         db.session.commit()
 
         # Get recommendation from ChatService
-        result = recommendations_service.get(member_id, message)
+        rs = RecommendationsService(member_id)
+        result = rs.get(trigger=RecommendationTrigger.CHATBOT_MESSAGE, params={'message': message})
         
         # Extract movie IDs from recommendations
         movie_ids = [rec['id'] for rec in result.get('recommendations', [])]
@@ -77,6 +75,7 @@ def post(member_id):
 def get(member_id):
     """Get chat history for the current member"""
     try:
+        # checks whether older messages should be expired before querying chat
         ChatMessage.expire_all(member_id, with_commit=True)
 
         messages = ChatMessage.query\
