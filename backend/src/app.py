@@ -1,6 +1,8 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
+from flask_caching import Cache
+from services.recommendations import RecommendationsService
 
 # Load environment variables from .env file
 load_dotenv()
@@ -10,7 +12,14 @@ from database import init_db
 from routes import membership_bp, movies_bp, watchlist_bp, chat_bp
 
 app = Flask(__name__)
+
 app.config.from_object(Config)
+
+cache = Cache(app, config={
+    'CACHE_TYPE': 'simple',
+    'CACHE_DEFAULT_TIMEOUT': 3600
+})
+RecommendationsService.cache = cache
 
 init_db(app)
 

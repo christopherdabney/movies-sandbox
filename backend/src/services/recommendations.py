@@ -8,9 +8,39 @@ from sqlalchemy.orm import joinedload
 from utils.movies import extract_filters, get_allowable_ratings
 from sqlalchemy.sql import func
 from aiagent.claude import ClaudeClient
+from functools import wraps
 
 # Template directory constant
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent / 'templates' / 'prompts'
+
+from functools import wraps
+
+def cache_recommendations(func):
+    """Decorator to cache recommendation results"""
+    def wrapper(self, trigger, params=None):
+        # Skip caching for chatbot (conversational)
+        if trigger == RecommendationTrigger.CHATBOT_MESSAGE:
+            return func(self, trigger, params)
+        
+        # Build cache key
+        cache_key = f"rec:{self.member_id}:{trigger.value}"
+        
+        # Try cache first
+        if self.cache:
+            cached = self.cache.get(cache_key)
+            if cached:
+                return cached
+        
+        # Execute function
+        result = func(self, trigger, params)
+        
+        # Store in cache
+        if self.cache:
+            self.cache.set(cache_key, result, timeout=60*60) # one hour
+        
+        return result
+    
+    return wrapper
 
 
 class RecommendationTrigger(Enum):
@@ -24,7 +54,8 @@ class RecommendationTrigger(Enum):
 
 class RecommendationsService:
     """Handles movie recommendations via multiple triggers"""
-    
+    cache = None  # Set by app.py
+
     def __init__(self, member_id):
         """
         Initialize recommendations service for a specific member
@@ -36,6 +67,7 @@ class RecommendationsService:
         self.jinja_env = Environment(loader=FileSystemLoader(TEMPLATE_DIR))
         self.claude_client = None  # Lazy loaded when AI needed
     
+    @cache_recommendations
     def get(self, trigger, params=None):
         """
         Get recommendations based on trigger type
