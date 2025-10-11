@@ -7,7 +7,9 @@ from sqlalchemy.orm import joinedload
 from models.movie import Movie
 from auth import token_required
 from datetime import datetime
-from utils.movies import get_allowable_ratings
+from utils.movies import get_allowable_ratings, get_rating, age_unlocks_ratings
+from sqlalchemy.sql import func
+from models.movie import Movie
 
 watchlist_bp = Blueprint('watchlist', __name__, url_prefix='/watchlist')
 
@@ -27,7 +29,7 @@ def post(member_id):
         return jsonify({'error': 'Movie not found'}), 404
     
     member = Member.query.get(member_id)
-    allowed_ratings = get_allowable_ratings(member.calculate_age())
+    allowed_ratings = get_allowable_ratings(member.age())
     if not movie.rating in allowed_ratings:
         return jsonify({'error': 'Movie not found'}), 404
 
@@ -163,6 +165,33 @@ def overview(member_id):
     watched = sum(1 for i in items if i.status == WatchlistFilterValue.WATCHED)
     queued = sum(1 for i in items if i.status == WatchlistFilterValue.QUEUED)
     """
+    member = Member.query.get(member_id)
+
+    reason = ''
+    serialized_movies = []
+    if (
+        member.birthday_within_last_month() 
+        and age_unlocks_ratings(member.age_last_year(), member.age())
+    ):
+        rating = get_rating(member.age())
+        if member.is_birthday():
+            reason = f"Happy Birthday! {rating} movies have been unlocked!"
+        else:
+            reason = f"You are now able to browse {rating} movies."
+        total_films = 6
+        random_movies = Movie.query\
+            .filter_by(rating=rating)\
+            .order_by(func.random())\
+            .limit(total_films)\
+            .all()
+        serialized_movies = [movie.to_dict() for movie in random_movies]
+    else:
+        queued_movies = Watchlist.query\
+            .filter_by(member_id=member.id, status=WatchlistStatus.QUEUED)\
+            .options(joinedload(Watchlist.movie))\
+            .all()
+        serialized_movies = [item.movie.to_dict() for item in queued_movies]
+
     statuses = db.session.query(Watchlist.status).filter_by(member_id=member_id).all()
     return jsonify({
         'watchlist': {
@@ -170,5 +199,9 @@ def overview(member_id):
             'watched': sum(1 for (s,) in statuses if s == 'watched'),
             'queued': sum(1 for (s,) in statuses if s == 'queued'),
         },
-        'recommendations': []
+        'recommendations': {
+            'movies': serialized_movies,
+            'reason': reason,
+        }
+
     }), 200

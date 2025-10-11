@@ -9,7 +9,7 @@ membership_bp = Blueprint('membership', __name__, url_prefix='/member')
 
 @membership_bp.route('', methods=['GET'])
 @token_required
-def account(member_id):
+def get(member_id):
     print('account endpoint called with', member_id)
     member = Member.query.get(member_id)
     if member:
@@ -38,7 +38,7 @@ def logout():
         make_response(jsonify({'message': 'Logged out successfully'})))
 
 @membership_bp.route('/register', methods=['POST'])
-def register():
+def post():
     data = request.get_json()
     # Parse date_of_birth from ISO format string (YYYY-MM-DD)
     date_of_birth = date.fromisoformat(data.get('dateOfBirth'))

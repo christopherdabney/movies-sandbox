@@ -17,6 +17,22 @@ def get_allowable_ratings(age):
         if age >= min_age
     ]
 
+def get_rating(age):
+    """
+    Given an age, return the highest rating the user is eligible to watch.
+    If the age is below all thresholds, returns the lowest rating.
+    """
+    # Sort ratings by minimum age requirement, descending
+    sorted_ratings = sorted(RATING_AGE_REQUIREMENTS.items(), key=lambda x: x[1], reverse=True)
+    for rating, min_age in sorted_ratings:
+        if age >= min_age:
+            return rating
+    # Default to lowest rating if nothing matches
+    return 'G'
+
+def age_unlocks_ratings(prev, next):
+    return get_rating(prev) != get_rating(next)
+
 def extract_filters(user_message):
     """
     Extract decade filters from user message

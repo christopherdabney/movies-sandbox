@@ -30,7 +30,7 @@ def list(member_id=None):
     movies_list = []
     if member_id:
         member = Member.query.get(member_id)
-        age = member.calculate_age()
+        age = member.age()
         query = query.filter(Movie.rating.in_(get_allowable_ratings(age)))
 
         # Query movies with LEFT JOIN to watchlist
@@ -69,7 +69,7 @@ def get(id, member_id=None):
     if member_id:
         movie = Movie.query.get(id)
         member = Member.query.get(member_id)
-        allowed_ratings = get_allowable_ratings(member.calculate_age())
+        allowed_ratings = get_allowable_ratings(member.age())
         if not movie.rating in allowed_ratings:
             return jsonify({'error': 'Movie not found'}), 404
 

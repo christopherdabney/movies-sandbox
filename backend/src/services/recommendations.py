@@ -10,6 +10,7 @@ from models.chat_message import ChatMessage
 from sqlalchemy.orm import joinedload
 from utils.movies import extract_filters
 from utils.movies import get_allowable_ratings
+from sqlalchemy.sql import func
 
 ROLE_USER = 'user'  # move this to ChatMessage or elsewhere?
 
@@ -83,14 +84,24 @@ class RecommendationsService:
         filters = extract_filters(message)
 
         member = Member.query.get(member_id)
-        allowed_ratings = get_allowable_ratings(member.calculate_age())
+        allowed_ratings = get_allowable_ratings(member.age())
 
         # Build query with age filter
         MAX_FILMS = 100
         if filters['decades']:
-            movies = Movie.find_by_filters(filters, limit=MAX_FILMS, allowed_ratings=allowed_ratings)
+            #movies = Movie.find_by_filters(filters, limit=MAX_FILMS, allowed_ratings=allowed_ratings)
+            movies = Movie.find_by_filters(
+                filters, 
+                limit=MAX_FILMS, 
+                allowed_ratings=allowed_ratings, 
+                order_by=func.random())
         else:
-            movies = Movie.query.filter(Movie.rating.in_(allowed_ratings)).limit(MAX_FILMS).all()
+            #movies = Movie.query.filter(Movie.rating.in_(allowed_ratings)).limit(MAX_FILMS).all()
+            movies = Movie.query\
+                .filter(Movie.rating.in_(allowed_ratings))\
+                .order_by(func.random())\
+                .limit(MAX_FILMS)\
+                .all()
     
 
         return [

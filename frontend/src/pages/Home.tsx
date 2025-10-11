@@ -46,6 +46,7 @@ function Home() {
           credentials: 'include',
         });
         const summary = await overview.json();
+        console.log(summary);
         setStats({
           total: summary.watchlist.total,
           toWatch: summary.watchlist.queued,
