@@ -42,29 +42,14 @@ function Home() {
     const fetchStats = async () => {
       try {
         setStatsLoading(true);
-        
-        // Fetch all watchlist items
-        const allResponse = await fetch(API_ENDPOINTS.WATCHLIST.LIST, {
+        const overview = await fetch(API_ENDPOINTS.WATCHLIST.OVERVIEW, {
           credentials: 'include',
         });
-        const allData = await allResponse.json();
-        
-        // Fetch queued items
-        const toWatchResponse = await fetch(`${API_ENDPOINTS.WATCHLIST.LIST}?status=${WatchlistFilterValue.QUEUED}`, {
-          credentials: 'include',
-        });
-        const toWatchData = await toWatchResponse.json();
-        
-        // Fetch watched items
-        const watchedResponse = await fetch(`${API_ENDPOINTS.WATCHLIST.LIST}?status=${WatchlistFilterValue.WATCHED}`, {
-          credentials: 'include',
-        });
-        const watchedData = await watchedResponse.json();
-
+        const summary = await overview.json();
         setStats({
-          total: allData.count || 0,
-          toWatch: toWatchData.count || 0,
-          watched: watchedData.count || 0,
+          total: summary.watchlist.total,
+          toWatch: summary.watchlist.queued,
+          watched: summary.watchlist.watched,
         });
       } catch (error) {
         console.error('Error fetching stats:', error);

@@ -147,3 +147,28 @@ def update(member_id, movie_id):
         'message': 'Watchlist status updated',
         'watchlist': watchlist_item.to_dict()
     }), 200
+
+@watchlist_bp.route('/overview', methods=['GET'])
+@token_required
+def overview(member_id):
+    """
+    total = Watchlist.query.filter_by(member_id=member_id).count()
+
+    watched = Watchlist.query.filter_by(member_id=member_id, status=WatchlistFilterValue.WATCHED).count()
+    queued = Watchlist.query.filter_by(member_id=member_id, status=WatchlistFilterValue.QUEUED).count()
+
+    items = Watchlist.query.filter_by(member_id=member_id).all()
+
+    total = len(items)
+    watched = sum(1 for i in items if i.status == WatchlistFilterValue.WATCHED)
+    queued = sum(1 for i in items if i.status == WatchlistFilterValue.QUEUED)
+    """
+    statuses = db.session.query(Watchlist.status).filter_by(member_id=member_id).all()
+    return jsonify({
+        'watchlist': {
+            'total': len(statuses),
+            'watched': sum(1 for (s,) in statuses if s == 'watched'),
+            'queued': sum(1 for (s,) in statuses if s == 'queued'),
+        },
+        'recommendations': []
+    }), 200
