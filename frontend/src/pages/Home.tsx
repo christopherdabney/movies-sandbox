@@ -28,6 +28,24 @@ function Home() {
   const [loading, setLoading] = useState(true)
   const carouselRef = useRef<HTMLDivElement>(null)
   const isScrolling = useRef(false)
+  const autoScrollRef = useRef<NodeJS.Timeout | null>(null)
+  const hasInteractedRef = useRef(false)
+
+  // Auto-scroll effect
+  useEffect(() => {
+    if (carouselRef.current && overview?.recommendations?.movies?.length && !hasInteractedRef.current) {
+      autoScrollRef.current = setInterval(() => {
+        if (carouselRef.current) {
+          carouselRef.current.scrollLeft += 1 // Adjust speed here (1px per tick)
+        }
+      }, 20) // Adjust interval for smoothness (20ms)
+    }
+    // Cleanup
+    return () => {
+      if (autoScrollRef.current) clearInterval(autoScrollRef.current)
+    }
+  }, [overview]) // Only re-run when overview changes
+
 
   useEffect(() => {
     const loadAccount = async () => {
@@ -78,6 +96,7 @@ function Home() {
   }, [overview])
 
   const scroll = (direction: 'left' | 'right') => {
+    stopAutoScroll()
     if (!carouselRef.current || isScrolling.current) return
     
     isScrolling.current = true
@@ -114,8 +133,18 @@ function Home() {
     }
   }
 
-  if (!account || loading) {
-    return null
+  // Optionally, stop auto-scroll on manual scroll or mouse/touch
+  const handleUserInteraction = () => {
+    stopAutoScroll()
+  }
+
+  // Stop auto-scroll on arrow click
+  const stopAutoScroll = () => {
+    if (autoScrollRef.current) {
+      clearInterval(autoScrollRef.current)
+      autoScrollRef.current = null
+    }
+    hasInteractedRef.current = true
   }
 
   const movies = overview?.recommendations?.movies || []
@@ -126,13 +155,17 @@ function Home() {
   const infiniteMovies = movies.length > 0 ? [...movies, ...movies, ...movies] : []
   const showCarousel = movies.length > 0
 
+  if (!account || loading) {
+    return null
+  }
+
   return (
     <div className="home-container">
       <div className="home-content">
         <h1 className="welcome-message">Welcome {account.firstName}</h1>
         
         <div className="user-info">
-          <div>Age: {account.age}, Rating: { account.rating}</div>
+          <div>Age: {account.age}, Unlocked Rating: { account.rating}</div>
         </div>
 
         <table className="stats-table">
@@ -168,6 +201,8 @@ function Home() {
               className="carousel" 
               ref={carouselRef}
               onScroll={handleScroll}
+              onMouseDown={handleUserInteraction}
+              onTouchStart={handleUserInteraction}
             >
               {infiniteMovies.map((movie, index) => (
                 <div key={`${movie.id}-${index}`} className="carousel-item">
