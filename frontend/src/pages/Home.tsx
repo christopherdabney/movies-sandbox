@@ -63,11 +63,17 @@ function Home() {
   }, [account])
 
   useEffect(() => {
-    // Initialize scroll position to start of first real set (middle)
     if (carouselRef.current && overview?.recommendations?.movies?.length) {
-      const itemWidth = 270 // 250px width + 20px gap
+      const carousel = carouselRef.current
+      const itemWidth = 270
       const movies = overview.recommendations.movies
-      carouselRef.current.scrollLeft = itemWidth * movies.length
+      // Temporarily disable smooth scroll
+      carousel.style.scrollBehavior = 'auto'
+      carousel.scrollLeft = itemWidth * movies.length
+      // Re-enable smooth scroll
+      setTimeout(() => {
+        carousel.style.scrollBehavior = ''
+      }, 0)
     }
   }, [overview])
 
