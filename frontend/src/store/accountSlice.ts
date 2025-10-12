@@ -43,7 +43,6 @@ export const loginRecord = createAsyncThunk(
       credentials: 'include',
     })
 
-    console.log('1')
     if (!response.ok) {
       let errorMessage = 'Failed to log in'
       try {

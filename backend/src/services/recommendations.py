@@ -11,7 +11,7 @@ from aiagent.claude import ClaudeClient
 from functools import wraps
 
 # Template directory constant
-TEMPLATE_DIR = Path(__file__).resolve().parent.parent / 'templates' / 'prompts'
+TEMPLATE_DIR = Path(__file__).resolve().parent.parent / 'templates' / 'context'
 
 from functools import wraps
 
@@ -48,7 +48,7 @@ class RecommendationTrigger(Enum):
     CHATBOT_MESSAGE = "chatbot"
     RATING_UNLOCK = "unlock"
     WATCHLIST_QUEUED = "queued"
-    WATCHLIST_SIMILAR = "watched"
+    WATCHLIST_SIMILAR = "similar"
     DATABASE_RANDOM = "fresh"
 
 
@@ -102,7 +102,7 @@ class RecommendationsService:
         watchlist_movies = self._get_watchlist()
         available_movies = self._get_available_movies(message)
         
-        # Build system prompt
+        # Build system context
         template = self.jinja_env.get_template('chatbot.jinja')
         context = template.render(
             watchlist_movies=watchlist_movies,
@@ -208,8 +208,8 @@ class RecommendationsService:
             for m in available_movies_list
         ]
         
-        # Build system prompt
-        template = self.jinja_env.get_template('watched.jinja')
+        # Build system context
+        template = self.jinja_env.get_template('similar.jinja')
         context = template.render(
             watched_movies=watched_movies,
             available_movies=available_movies,

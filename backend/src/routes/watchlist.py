@@ -155,25 +155,23 @@ def update(member_id, movie_id):
 @token_required
 def overview(member_id):
     """
-    total = Watchlist.query.filter_by(member_id=member_id).count()
-
-    watched = Watchlist.query.filter_by(member_id=member_id, status=WatchlistFilterValue.WATCHED).count()
-    queued = Watchlist.query.filter_by(member_id=member_id, status=WatchlistFilterValue.QUEUED).count()
-
-    items = Watchlist.query.filter_by(member_id=member_id).all()
-
-    total = len(items)
-    watched = sum(1 for i in items if i.status == WatchlistFilterValue.WATCHED)
-    queued = sum(1 for i in items if i.status == WatchlistFilterValue.QUEUED)
+    Get watchlist overview and smart recommendations based on priority:
+    1. Birthday/unlock trigger (highest priority)
+    2. Empty watchlist → fresh random picks
+    3. All watched, no queued → similar recommendations (AI)
+    4. Has queued movies → return those
     """
     member = Member.query.get(member_id)
-
+    
     reason = ''
     serialized_movies = []
+    
+    # Priority 1: Birthday/unlock trigger
     if (
         member.birthday_within_last_month() 
         and age_unlocks_ratings(member.age_last_year(), member.age())
     ):
+        print('TRIGGER: Birthday')
         rating = get_rating(member.age())
         if member.is_birthday():
             reason = f"Happy Birthday! {rating} movies have been unlocked!"
@@ -185,13 +183,45 @@ def overview(member_id):
             params={'rating': rating}
         )
         serialized_movies = result.get('recommendations', [])
+    
     else:
-        queued_movies = Watchlist.query\
-            .filter_by(member_id=member.id, status=WatchlistStatus.QUEUED)\
-            .options(joinedload(Watchlist.movie))\
+        # Get watchlist stats
+        watchlist_items = Watchlist.query\
+            .filter_by(member_id=member_id)\
             .all()
-        serialized_movies = [item.movie.to_dict() for item in queued_movies]
-
+        
+        queued_count = sum(1 for item in watchlist_items if item.status == WatchlistStatus.QUEUED)
+        watched_count = sum(1 for item in watchlist_items if item.status == WatchlistStatus.WATCHED)
+        total_count = len(watchlist_items)
+        
+        # Priority 2: Empty watchlist → random fresh picks
+        if total_count == 0:
+            print('TRIGGER: FRESH PICKS')
+            rs = RecommendationsService(member_id)
+            result = rs.get(trigger=RecommendationTrigger.DATABASE_RANDOM)
+            serialized_movies = result.get('recommendations', [])
+            reason = 'Movies from our collection'
+        
+        # Priority 3: All watched, no queued → similar recommendations
+        elif queued_count == 0 and watched_count > 0:
+            print('TRIGGER: SIMILAR FILMS')
+            rs = RecommendationsService(member_id)
+            result = rs.get(trigger=RecommendationTrigger.WATCHLIST_SIMILAR)
+            serialized_movies = result.get('recommendations', [])
+            #reason = result.get('message', 'Movies based on your watched movies')
+            reason = 'Movies based on your watched movies'
+        
+        # Priority 4: Has queued movies → return those
+        else:
+            print('TRIGGER: QUEUED FILMS')
+            queued_movies = Watchlist.query\
+                .filter_by(member_id=member_id, status=WatchlistStatus.QUEUED)\
+                .options(joinedload(Watchlist.movie))\
+                .all()
+            serialized_movies = [item.movie.to_dict() for item in queued_movies]
+            reason = 'Movies from your watchlist queue'
+    
+    # Get final stats for response
     statuses = db.session.query(Watchlist.status).filter_by(member_id=member_id).all()
     return jsonify({
         'watchlist': {
@@ -203,5 +233,4 @@ def overview(member_id):
             'movies': serialized_movies,
             'reason': reason,
         }
-
     }), 200
