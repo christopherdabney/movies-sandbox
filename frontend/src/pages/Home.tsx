@@ -30,21 +30,21 @@ function Home() {
   const isScrolling = useRef(false)
   const autoScrollRef = useRef<NodeJS.Timeout | null>(null)
   const hasInteractedRef = useRef(false)
+  const [needsInfiniteScroll, setNeedsInfiniteScroll] = useState(false);
 
   // Auto-scroll effect
   useEffect(() => {
-    if (carouselRef.current && overview?.recommendations?.movies?.length && !hasInteractedRef.current) {
+    if (carouselRef.current && overview?.recommendations?.movies?.length && !hasInteractedRef.current && needsInfiniteScroll) {
       autoScrollRef.current = setInterval(() => {
         if (carouselRef.current) {
-          carouselRef.current.scrollLeft += 1 // Adjust speed here (1px per tick)
+          carouselRef.current.scrollLeft += 1;
         }
-      }, 20) // Adjust interval for smoothness (20ms)
+      }, 20);
     }
-    // Cleanup
     return () => {
-      if (autoScrollRef.current) clearInterval(autoScrollRef.current)
-    }
-  }, [overview]) // Only re-run when overview changes
+      if (autoScrollRef.current) clearInterval(autoScrollRef.current);
+    };
+  }, [overview, needsInfiniteScroll]);
 
 
   useEffect(() => {
@@ -115,23 +115,47 @@ function Home() {
     }, 300)
   }
 
+  useEffect(() => {
+    if (carouselRef.current && overview?.recommendations?.movies?.length) {
+      const carousel = carouselRef.current;
+      // Check if content width exceeds viewport width
+      const contentWidth = overview.recommendations.movies.length * 270; // 250px width + 20px gap
+      const viewportWidth = carousel.clientWidth;
+      setNeedsInfiniteScroll(contentWidth > viewportWidth);
+    } else {
+      setNeedsInfiniteScroll(false);
+    }
+  }, [overview]);
+
+  // Update the infiniteMovies calculation
+  const movies = overview?.recommendations?.movies || [];
+  const reason = overview?.recommendations?.reason || '';
+  const stats = overview?.watchlist || { total: 0, queued: 0, watched: 0 };
+
+  // Create infinite scroll by tripling the movie array
+  // Only triple for infinite scroll, otherwise show once
+  const infiniteMovies = needsInfiniteScroll && movies.length > 0
+    ? [...movies, ...movies, ...movies]
+    : movies;
+
+  const showCarousel = movies.length > 0
+
+  // Update handleScroll to only run when infinite scroll is enabled
   const handleScroll = () => {
-    if (!carouselRef.current || !overview?.recommendations?.movies?.length || isScrolling.current) return
+    if (!needsInfiniteScroll || !carouselRef.current || !overview?.recommendations?.movies?.length || isScrolling.current) return;
     
-    const carousel = carouselRef.current
-    const itemWidth = 270 // 250px width + 20px gap
-    const movies = overview.recommendations.movies
-    const setWidth = itemWidth * movies.length
+    const carousel = carouselRef.current;
+    const itemWidth = 270;
+    const movies = overview.recommendations.movies;
+    const setWidth = itemWidth * movies.length;
     
-    // Check if scrolled to beginning (before first clone set)
     if (carousel.scrollLeft < itemWidth) {
-      carousel.scrollLeft = setWidth + carousel.scrollLeft
+      carousel.scrollLeft = setWidth + carousel.scrollLeft;
     }
-    // Check if scrolled to end (after last clone set)
     else if (carousel.scrollLeft >= setWidth * 2) {
-      carousel.scrollLeft = carousel.scrollLeft - setWidth
+      carousel.scrollLeft = carousel.scrollLeft - setWidth;
     }
-  }
+  };
 
   // Optionally, stop auto-scroll on manual scroll or mouse/touch
   const handleUserInteraction = () => {
@@ -147,13 +171,6 @@ function Home() {
     hasInteractedRef.current = true
   }
 
-  const movies = overview?.recommendations?.movies || []
-  const reason = overview?.recommendations?.reason || ''
-  const stats = overview?.watchlist || { total: 0, queued: 0, watched: 0 }
-
-  // Create infinite scroll by tripling the movie array
-  const infiniteMovies = movies.length > 0 ? [...movies, ...movies, ...movies] : []
-  const showCarousel = movies.length > 0
 
   if (!account || loading) {
     return null
@@ -189,13 +206,15 @@ function Home() {
 
         {showCarousel && (
           <div className="carousel-container">
-            <button 
-              className="carousel-arrow carousel-arrow-left"
-              onClick={() => scroll('left')}
-              aria-label="Scroll left"
-            >
-              ‹
-            </button>
+            {needsInfiniteScroll && 
+              <button 
+                className="carousel-arrow carousel-arrow-left"
+                onClick={() => scroll('left')}
+                aria-label="Scroll left"
+              >
+                ‹
+              </button>
+            }
             
             <div 
               className="carousel" 
@@ -211,13 +230,15 @@ function Home() {
               ))}
             </div>
 
-            <button 
-              className="carousel-arrow carousel-arrow-right"
-              onClick={() => scroll('right')}
-              aria-label="Scroll right"
-            >
-              ›
-            </button>
+            {needsInfiniteScroll && 
+              <button 
+                className="carousel-arrow carousel-arrow-right"
+                onClick={() => scroll('right')}
+                aria-label="Scroll right"
+              >
+                ›
+              </button>
+            }
           </div>
         )}
       </div>

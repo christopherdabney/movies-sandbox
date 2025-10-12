@@ -35,6 +35,38 @@ class Movie(db.Model):
     def __repr__(self):
         return f'<Movie {self.title} ({self.release_year})>'
     
+    @classmethod
+    def hydrate(cls, recommendations):
+        """
+        Hydrate recommendation objects with full movie data including poster_url.
+        Preserves the 'reason' field from recommendations.
+        
+        Args:
+            recommendations: List of dicts with {id, title, year, genre, reason}
+        
+        Returns:
+            List of full movie dicts with reason field added
+        """
+        if not recommendations:
+            return []
+        
+        # Extract movie IDs
+        movie_ids = [rec['id'] for rec in recommendations]
+        
+        # Fetch full movie data
+        movies = Movie.query.filter(Movie.id.in_(movie_ids)).all()
+        movie_map = {m.id: m.to_dict() for m in movies}
+        
+        # Merge with reasons from recommendations
+        hydrated = []
+        for rec in recommendations:
+            movie_data = movie_map.get(rec['id'])
+            if movie_data:
+                movie_data['reason'] = rec.get('reason', '')
+                hydrated.append(movie_data)
+        
+        return hydrated
+
     @staticmethod
     def find_by_filters(filters, limit=100, allowed_ratings=None):
         """

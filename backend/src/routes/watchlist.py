@@ -182,7 +182,7 @@ def overview(member_id):
             trigger=RecommendationTrigger.RATING_UNLOCK, 
             params={'rating': rating}
         )
-        serialized_movies = result.get('recommendations', [])
+        serialized_movies = Movie.hydrate(result.get('recommendations', []))
     
     else:
         # Get watchlist stats
@@ -199,19 +199,18 @@ def overview(member_id):
             print('TRIGGER: FRESH PICKS')
             rs = RecommendationsService(member_id)
             result = rs.get(trigger=RecommendationTrigger.DATABASE_RANDOM)
-            serialized_movies = result.get('recommendations', [])
-            reason = 'Movies from our collection'
+            serialized_movies = Movie.hydrate(result.get('recommendations', []))
+            reason = 'Fresh picks from our collection'
         
         # Priority 3: All watched, no queued → similar recommendations
         elif queued_count == 0 and watched_count > 0:
             print('TRIGGER: SIMILAR FILMS')
             rs = RecommendationsService(member_id)
             result = rs.get(trigger=RecommendationTrigger.WATCHLIST_SIMILAR)
-            serialized_movies = result.get('recommendations', [])
-            #reason = result.get('message', 'Movies based on your watched movies')
-            reason = 'Movies based on your watched movies'
+            serialized_movies = Movie.hydrate(result.get('recommendations', []))
+            reason = 'Based on movies you\'ve watched'
         
-        # Priority 4: Has queued movies → return those
+        # Priority 4: Has queued movies → return those (already hydrated)
         else:
             print('TRIGGER: QUEUED FILMS')
             queued_movies = Watchlist.query\
