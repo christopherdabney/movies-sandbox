@@ -1,30 +1,35 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { accountRecord } from '../store/accountSlice'
 import type { AppDispatch, RootState } from '../store/store'
 import { API_ENDPOINTS } from '../constants/api'
-import { WatchlistFilterValue } from '../types/Watchlist';
-import type { WatchlistFilter } from '../types/Watchlist';
+import MovieTile from '../components/MovieTile'
+import type { Movie } from '../types'
 import './../styles/Home.css'
 
-interface WatchlistStats {
-  total: number;
-  toWatch: number;
-  watched: number;
-  watching: number;
+interface OverviewResponse {
+  watchlist: {
+    total: number;
+    queued: number;
+    watched: number;
+  };
+  recommendations: {
+    movies: Movie[];
+    reason: string;
+  };
 }
 
 function Home() {
   const dispatch = useDispatch<AppDispatch>()
-  const navigate = useNavigate();
-  const { account, error, loading } = useSelector((state: RootState) => state.account)
-  const [stats, setStats] = useState<WatchlistStats>({
-    total: 0,
-    toWatch: 0,
-    watched: 0
-  });
-  const [statsLoading, setStatsLoading] = useState(true);
+  const navigate = useNavigate()
+  const { account } = useSelector((state: RootState) => state.account)
+  const [overview, setOverview] = useState<OverviewResponse | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [scrollPosition, setScrollPosition] = useState(0)
+  const [showLeftArrow, setShowLeftArrow] = useState(false)
+  const [showRightArrow, setShowRightArrow] = useState(false)
+  const carouselRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const loadAccount = async () => {
@@ -39,62 +44,129 @@ function Home() {
   }, [dispatch, navigate])
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchOverview = async () => {
       try {
-        setStatsLoading(true);
-        const overview = await fetch(API_ENDPOINTS.WATCHLIST.OVERVIEW, {
+        setLoading(true)
+        const response = await fetch(API_ENDPOINTS.WATCHLIST.OVERVIEW, {
           credentials: 'include',
-        });
-        const summary = await overview.json();
-        console.log(summary);
-        setStats({
-          total: summary.watchlist.total,
-          toWatch: summary.watchlist.queued,
-          watched: summary.watchlist.watched,
-        });
+        })
+        const data: OverviewResponse = await response.json()
+        setOverview(data)
       } catch (error) {
-        console.error('Error fetching stats:', error);
+        console.error('Error fetching overview:', error)
       } finally {
-        setStatsLoading(false);
+        setLoading(false)
       }
-    };
+    }
     
     if (account) {
-      fetchStats();
+      fetchOverview()
     }
-  }, [account]);
+  }, [account])
 
-  if (!account) {
-    return null;
+  useEffect(() => {
+    updateArrowVisibility()
+  }, [overview, scrollPosition])
+
+  const updateArrowVisibility = () => {
+    if (!carouselRef.current) return
+    
+    const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current
+    setShowLeftArrow(scrollLeft > 0)
+    setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10)
   }
-  
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (!carouselRef.current) return
+    
+    const scrollAmount = carouselRef.current.clientWidth * 0.8
+    const newPosition = direction === 'left' 
+      ? carouselRef.current.scrollLeft - scrollAmount
+      : carouselRef.current.scrollLeft + scrollAmount
+    
+    carouselRef.current.scrollTo({
+      left: newPosition,
+      behavior: 'smooth'
+    })
+  }
+
+  const handleScroll = () => {
+    if (carouselRef.current) {
+      setScrollPosition(carouselRef.current.scrollLeft)
+    }
+  }
+
+  if (!account || loading) {
+    return null
+  }
+
+  const movies = overview?.recommendations?.movies || []
+  const reason = overview?.recommendations?.reason || ''
+  const stats = overview?.watchlist || { total: 0, queued: 0, watched: 0 }
+
   return (
     <div className="home-container">
       <div className="home-content">
-        <h1 className="welcome-message">
-          {account.firstName} {account.lastName}
-        </h1>
-
-        <div>
-          Age: {account.age}
-        </div>
+        <h1 className="welcome-message">Welcome {account.firstName}</h1>
         
-        <div className="stats-container">
-          <div className="stat-card">
-            <div className="stat-number">{stats.total}</div>
-            <div className="stat-label">Total Movies</div>
-          </div>
-          
-          <div className="stat-card">
-            <div className="stat-number">{stats.toWatch}</div>
-            <div className="stat-label">To Watch</div>
-          </div>
-          
-          <div className="stat-card">
-            <div className="stat-number">{stats.watched}</div>
-            <div className="stat-label">Watched</div>
-          </div>
+        <div className="user-info">
+          <div>Age: {account.age}, Rating: PG-13</div>
         </div>
+
+        <table className="stats-table">
+          <tbody>
+            <tr>
+              <td>Watched films:</td>
+              <td>{stats.watched}</td>
+            </tr>
+            <tr>
+              <td>Queue films:</td>
+              <td>{stats.queued}</td>
+            </tr>
+            <tr>
+              <td>Total films:</td>
+              <td>{stats.total}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        {reason && <div className="recommendation-message">{reason}</div>}
+
+        {movies.length > 0 && (
+          <div className="carousel-container">
+            {showLeftArrow && (
+              <button 
+                className="carousel-arrow carousel-arrow-left"
+                onClick={() => scroll('left')}
+                aria-label="Scroll left"
+              >
+                ‹
+              </button>
+            )}
+            
+            <div 
+              className="carousel" 
+              ref={carouselRef}
+              onScroll={handleScroll}
+            >
+              {movies.map((movie) => (
+                <div key={movie.id} className="carousel-item">
+                  <MovieTile movie={movie} />
+                </div>
+              ))}
+            </div>
+
+            {showRightArrow && (
+              <button 
+                className="carousel-arrow carousel-arrow-right"
+                onClick={() => scroll('right')}
+                aria-label="Scroll right"
+              >
+                ›
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
