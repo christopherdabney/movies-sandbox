@@ -26,10 +26,8 @@ function Home() {
   const { account } = useSelector((state: RootState) => state.account)
   const [overview, setOverview] = useState<OverviewResponse | null>(null)
   const [loading, setLoading] = useState(true)
-  const [scrollPosition, setScrollPosition] = useState(0)
-  const [showLeftArrow, setShowLeftArrow] = useState(false)
-  const [showRightArrow, setShowRightArrow] = useState(false)
   const carouselRef = useRef<HTMLDivElement>(null)
+  const isScrolling = useRef(false)
 
   useEffect(() => {
     const loadAccount = async () => {
@@ -65,20 +63,18 @@ function Home() {
   }, [account])
 
   useEffect(() => {
-    updateArrowVisibility()
-  }, [overview, scrollPosition])
-
-  const updateArrowVisibility = () => {
-    if (!carouselRef.current) return
-    
-    const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current
-    setShowLeftArrow(scrollLeft > 0)
-    setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10)
-  }
+    // Initialize scroll position to start of first real set (middle)
+    if (carouselRef.current && overview?.recommendations?.movies?.length) {
+      const itemWidth = 270 // 250px width + 20px gap
+      const movies = overview.recommendations.movies
+      carouselRef.current.scrollLeft = itemWidth * movies.length
+    }
+  }, [overview])
 
   const scroll = (direction: 'left' | 'right') => {
-    if (!carouselRef.current) return
+    if (!carouselRef.current || isScrolling.current) return
     
+    isScrolling.current = true
     const scrollAmount = carouselRef.current.clientWidth * 0.8
     const newPosition = direction === 'left' 
       ? carouselRef.current.scrollLeft - scrollAmount
@@ -88,11 +84,27 @@ function Home() {
       left: newPosition,
       behavior: 'smooth'
     })
+
+    setTimeout(() => {
+      isScrolling.current = false
+    }, 300)
   }
 
   const handleScroll = () => {
-    if (carouselRef.current) {
-      setScrollPosition(carouselRef.current.scrollLeft)
+    if (!carouselRef.current || !overview?.recommendations?.movies?.length || isScrolling.current) return
+    
+    const carousel = carouselRef.current
+    const itemWidth = 270 // 250px width + 20px gap
+    const movies = overview.recommendations.movies
+    const setWidth = itemWidth * movies.length
+    
+    // Check if scrolled to beginning (before first clone set)
+    if (carousel.scrollLeft < itemWidth) {
+      carousel.scrollLeft = setWidth + carousel.scrollLeft
+    }
+    // Check if scrolled to end (after last clone set)
+    else if (carousel.scrollLeft >= setWidth * 2) {
+      carousel.scrollLeft = carousel.scrollLeft - setWidth
     }
   }
 
@@ -104,13 +116,17 @@ function Home() {
   const reason = overview?.recommendations?.reason || ''
   const stats = overview?.watchlist || { total: 0, queued: 0, watched: 0 }
 
+  // Create infinite scroll by tripling the movie array
+  const infiniteMovies = movies.length > 0 ? [...movies, ...movies, ...movies] : []
+  const showCarousel = movies.length > 0
+
   return (
     <div className="home-container">
       <div className="home-content">
         <h1 className="welcome-message">Welcome {account.firstName}</h1>
         
         <div className="user-info">
-          <div>Age: {account.age}, Rating: PG-13</div>
+          <div>Age: {account.age}, Rating: { account.rating}</div>
         </div>
 
         <table className="stats-table">
@@ -132,39 +148,35 @@ function Home() {
 
         {reason && <div className="recommendation-message">{reason}</div>}
 
-        {movies.length > 0 && (
+        {showCarousel && (
           <div className="carousel-container">
-            {showLeftArrow && (
-              <button 
-                className="carousel-arrow carousel-arrow-left"
-                onClick={() => scroll('left')}
-                aria-label="Scroll left"
-              >
-                ‹
-              </button>
-            )}
+            <button 
+              className="carousel-arrow carousel-arrow-left"
+              onClick={() => scroll('left')}
+              aria-label="Scroll left"
+            >
+              ‹
+            </button>
             
             <div 
               className="carousel" 
               ref={carouselRef}
               onScroll={handleScroll}
             >
-              {movies.map((movie) => (
-                <div key={movie.id} className="carousel-item">
+              {infiniteMovies.map((movie, index) => (
+                <div key={`${movie.id}-${index}`} className="carousel-item">
                   <MovieTile movie={movie} />
                 </div>
               ))}
             </div>
 
-            {showRightArrow && (
-              <button 
-                className="carousel-arrow carousel-arrow-right"
-                onClick={() => scroll('right')}
-                aria-label="Scroll right"
-              >
-                ›
-              </button>
-            )}
+            <button 
+              className="carousel-arrow carousel-arrow-right"
+              onClick={() => scroll('right')}
+              aria-label="Scroll right"
+            >
+              ›
+            </button>
           </div>
         )}
       </div>

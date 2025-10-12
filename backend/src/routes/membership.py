@@ -4,16 +4,18 @@ from auth import token_required, add_token, remove_token, hash_password, check_p
 from database import db
 from models import Member
 from datetime import date
+from utils.movies import get_rating
 
 membership_bp = Blueprint('membership', __name__, url_prefix='/member')
 
 @membership_bp.route('', methods=['GET'])
 @token_required
 def get(member_id):
-    print('account endpoint called with', member_id)
     member = Member.query.get(member_id)
     if member:
-        return jsonify(member.to_dict())
+        member_dict = member.to_dict()
+        member_dict['rating'] = get_rating(member.age())
+        return jsonify(member_dict)
     return jsonify({'error': 'Member not found'}), 404
 
 @membership_bp.route('/login', methods=['POST'])
