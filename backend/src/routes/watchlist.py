@@ -46,12 +46,16 @@ def post(member_id):
         return jsonify({'error': 'Movie already in watchlist'}), 409
     
     try:
+        
+
         # Add movie to watch list
         watchlist_item = Watchlist(member_id=member_id, movie_id=movie_id)
         db.session.add(watchlist_item)
         
+        from flask import current_app
         # Complete chat exchange within same transaction
         ChatMessage.complete_exchange(member_id)
+        current_app.cache_manager.clear_chat_context(member_id)
         
         db.session.commit()
         

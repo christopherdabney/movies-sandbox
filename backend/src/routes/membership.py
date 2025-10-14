@@ -4,7 +4,7 @@ from auth import token_required, add_token, remove_token, hash_password, check_p
 from database import db
 from models import Member
 from datetime import date
-from utils.movies import get_rating
+from utils.movies import get_rating, AGE_UNLOCK_ALL
 
 membership_bp = Blueprint('membership', __name__, url_prefix='/member')
 
@@ -14,7 +14,8 @@ def get(member_id):
     member = Member.query.get(member_id)
     if member:
         member_dict = member.to_dict()
-        member_dict['rating'] = get_rating(member.age())
+        age = member.age()
+        member_dict['rating'] = get_rating(age) if age < AGE_UNLOCK_ALL else 'ALL'
         return jsonify(member_dict)
     return jsonify({'error': 'Member not found'}), 404
 

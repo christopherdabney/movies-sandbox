@@ -9,38 +9,14 @@ from utils.movies import extract_filters, get_allowable_ratings, AGE_UNLOCK_ALL
 from sqlalchemy.sql import func
 from aiagent.claude import ClaudeClient
 from functools import wraps
+from utils.cache import CacheKeys, cache_recommendations, cache_available_movies
 
 # Template directory constant
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent / 'templates' / 'context'
 
 from functools import wraps
 
-def cache_recommendations(func):
-    """Decorator to cache recommendation results"""
-    def wrapper(self, trigger, params=None):
-        # Skip caching for chatbot (conversational)
-        if trigger == RecommendationTrigger.CHATBOT_MESSAGE:
-            return func(self, trigger, params)
-        
-        # Build cache key
-        cache_key = f"rec:{self.member_id}:{trigger.value}"
-        
-        # Try cache first
-        if self.cache:
-            cached = self.cache.get(cache_key)
-            if cached:
-                return cached
-        
-        # Execute function
-        result = func(self, trigger, params)
-        
-        # Store in cache
-        if self.cache:
-            self.cache.set(cache_key, result, timeout=60*60) # one hour
-        
-        return result
-    
-    return wrapper
+
 
 
 class RecommendationTrigger(Enum):
@@ -280,6 +256,7 @@ class RecommendationsService:
             for item in watchlist_items
         ]
     
+    @cache_available_movies
     def _get_available_movies(self, message):
         """Get available movies, optionally filtered by message"""
         filters = extract_filters(message)

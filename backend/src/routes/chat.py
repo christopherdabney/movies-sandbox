@@ -97,7 +97,9 @@ def get(member_id):
 def delete(member_id):
     """Delete all chat messages for the current member"""
     try:
+        from flask import current_app
         ChatMessage.query.filter_by(member_id=member_id).delete()
+        current_app.cache_manager.clear_chat_context(member_id)
         db.session.commit()
         
         return jsonify({
