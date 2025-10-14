@@ -25,30 +25,14 @@ def post(member_id):
             content=message
         )
         db.session.add(chat_message)
-        db.session.commit()
 
         # Get recommendation from ChatService
         rs = RecommendationsService(member_id)
         result = rs.get(trigger=RecommendationTrigger.CHATBOT_MESSAGE, params={'message': message})
-        
-        # Extract movie IDs from recommendations
-        movie_ids = [rec['id'] for rec in result.get('recommendations', [])]
-        
-        # Hydrate recommendations with full movie data including poster_url
-        if movie_ids:
-            movies = Movie.query.filter(Movie.id.in_(movie_ids)).all()
-            # Create a map for quick lookup
-            movie_map = {m.id: m.to_dict() for m in movies}
-            # Merge with Claude's reasons
-            hydrated_recs = []
-            for rec in result.get('recommendations', []):
-                movie_data = movie_map.get(rec['id'])
-                if movie_data:
-                    movie_data['reason'] = rec.get('reason', '')
-                    hydrated_recs.append(movie_data)
-            result['recommendations'] = hydrated_recs
+        serialized_movies = Movie.hydrate(result.get('recommendations', []))
 
-        # Save assistant response
+        # Extract movie IDs from recommendations & Save assistant response
+        movie_ids = [rec['id'] for rec in result.get('recommendations', [])]
         assistant_chat_message = ChatMessage(
             member_id=member_id,
             role='assistant',
@@ -56,11 +40,13 @@ def post(member_id):
             recommended_movie_ids=movie_ids if movie_ids else None
         )
         db.session.add(assistant_chat_message)
+
+        # COMMIT BOTH TOGETHER - only once at the end
         db.session.commit()
 
         return jsonify({
             'message': result['message'],
-            'recommendations': result['recommendations']
+            'recommendations': serialized_movies
         }), 200
         
     except Exception as e:

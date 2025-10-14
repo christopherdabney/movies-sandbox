@@ -5,7 +5,7 @@ from models import Movie, Member
 from models.watchlist import Watchlist
 from models.chat_message import ChatMessage
 from sqlalchemy.orm import joinedload
-from utils.movies import extract_filters, get_allowable_ratings
+from utils.movies import extract_filters, get_allowable_ratings, AGE_UNLOCK_ALL
 from sqlalchemy.sql import func
 from aiagent.claude import ClaudeClient
 from functools import wraps
@@ -196,9 +196,14 @@ class RecommendationsService:
         
         # Get available movies
         member = Member.query.get(self.member_id)
-        allowed_ratings = get_allowable_ratings(member.age())
-        available_movies_list = Movie.query\
-            .filter(Movie.rating.in_(allowed_ratings))\
+        query = Movie.query
+
+        age = member.age()
+        if age < AGE_UNLOCK_ALL:
+            allowed_ratings = get_allowable_ratings(age)
+            query = query.filter(Movie.rating.in_(allowed_ratings))
+
+        available_movies_list = query\
             .order_by(func.random())\
             .limit(100)\
             .all()
@@ -230,11 +235,16 @@ class RecommendationsService:
     
     def _get_fresh(self):
         """Get random movies from database (no AI)"""
-        member = Member.query.get(self.member_id)
-        allowed_ratings = get_allowable_ratings(member.age())
-        
-        movies = Movie.query\
-            .filter(Movie.rating.in_(allowed_ratings))\
+        member = Member.query.get(self.member_id)        
+
+        query = Movie.query
+
+        age = member.age()
+        if age < AGE_UNLOCK_ALL:
+            allowed_ratings = get_allowable_ratings(age)
+            query = query.filter(Movie.rating.in_(allowed_ratings))
+
+        movies = query\
             .order_by(func.random())\
             .limit(10)\
             .all()
@@ -274,14 +284,15 @@ class RecommendationsService:
         """Get available movies, optionally filtered by message"""
         filters = extract_filters(message)
         member = Member.query.get(self.member_id)
-        allowed_ratings = get_allowable_ratings(member.age())
+        age = member.age()
+        allowed_ratings = get_allowable_ratings(age)
         
         MAX_FILMS = 100
         if filters['decades']:
             movies = Movie.find_by_filters(
                 filters,
                 limit=MAX_FILMS,
-                allowed_ratings=allowed_ratings,
+                allowed_ratings=allowed_ratings if age < AGE_UNLOCK_ALL else None,
                 order_by=func.random()
             )
         else:

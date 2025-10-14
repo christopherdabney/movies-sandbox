@@ -5,7 +5,7 @@ from models.watchlist import Watchlist
 from models.member import Member
 from utils.movies import get_allowable_ratings
 from sqlalchemy import and_
-from utils.movies import get_allowable_ratings
+from utils.movies import get_allowable_ratings, AGE_UNLOCK_ALL
 
 movies_bp = Blueprint('movies', __name__, url_prefix='/movies')
 
@@ -31,7 +31,8 @@ def list(member_id=None):
     if member_id:
         member = Member.query.get(member_id)
         age = member.age()
-        query = query.filter(Movie.rating.in_(get_allowable_ratings(age)))
+        if age < AGE_UNLOCK_ALL:
+            query = query.filter(Movie.rating.in_(get_allowable_ratings(age)))
 
         # Query movies with LEFT JOIN to watchlist
         movies_query = query\
@@ -69,8 +70,9 @@ def get(id, member_id=None):
     if member_id:
         movie = Movie.query.get(id)
         member = Member.query.get(member_id)
-        allowed_ratings = get_allowable_ratings(member.age())
-        if not movie.rating in allowed_ratings:
+        age = member.age()
+        allowed_ratings = get_allowable_ratings(age)
+        if not movie.rating in allowed_ratings and age < AGE_UNLOCK_ALL:
             return jsonify({'error': 'Movie not found'}), 404
 
         # Query with watchlist data

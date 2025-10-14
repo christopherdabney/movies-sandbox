@@ -1,13 +1,15 @@
+AGE_UNLOCK_ALL = 18
 RATING_AGE_REQUIREMENTS = {
     'G': 0,
     'PG': 0,
     'PG-13': 13,
     'R': 17,
-    'NC-17': 18
+    'NC-17': AGE_UNLOCK_ALL,
 }
 
 def can_watch_rating(member_age, movie_rating):
     """Check if member age meets rating requirement"""
+    if member_age >= AGE_UNLOCK_ALL: return True
     return member_age >= RATING_AGE_REQUIREMENTS.get(movie_rating, 18)
 
 def get_allowable_ratings(age):

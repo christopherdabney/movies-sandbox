@@ -7,7 +7,12 @@ from sqlalchemy.orm import joinedload
 from models.movie import Movie
 from auth import token_required
 from datetime import datetime
-from utils.movies import get_allowable_ratings, get_rating, age_unlocks_ratings
+from utils.movies import (
+    get_allowable_ratings, 
+    get_rating, 
+    age_unlocks_ratings, 
+    AGE_UNLOCK_ALL
+)
 from sqlalchemy.sql import func
 from models.movie import Movie
 from services import RecommendationsService, RecommendationTrigger
@@ -30,8 +35,9 @@ def post(member_id):
         return jsonify({'error': 'Movie not found'}), 404
     
     member = Member.query.get(member_id)
-    allowed_ratings = get_allowable_ratings(member.age())
-    if not movie.rating in allowed_ratings:
+    age = member.age()
+    allowed_ratings = get_allowable_ratings(age)
+    if not movie.rating in allowed_ratings and age < AGE_UNLOCK_ALL:
         return jsonify({'error': 'Movie not found'}), 404
 
     # Check if already in watchlist
