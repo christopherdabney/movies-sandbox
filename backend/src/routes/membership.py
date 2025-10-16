@@ -1,3 +1,4 @@
+import os
 from flask import Blueprint, request, jsonify, make_response
 from sqlalchemy.exc import IntegrityError
 from auth import token_required, add_token, remove_token, hash_password, check_password
@@ -5,6 +6,8 @@ from database import db
 from models import Member
 from datetime import date
 from utils.movies import get_rating, AGE_UNLOCK_ALL
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 membership_bp = Blueprint('membership', __name__, url_prefix='/member')
 
@@ -59,7 +62,22 @@ def post():
         # Add and commit to database
         db.session.add(new_member)
         db.session.commit()
-        
+
+        # After user is created in DB
+        message = Mail(
+            from_email='noreply@dabneystudios.com',
+            to_emails=data.get('email'),
+            subject='Welcome to our Movie Recommendations App!',
+            html_content='Thanks for joining us!'
+        )
+
+        try:
+            sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+            response = sg.send(message)
+            print(f"Email sent: {response.status_code}")
+        except Exception as e:
+            print(f"Error sending email: {e}")
+
         return add_token(
             make_response(jsonify({'message': 'Member registered'})), 
             new_member.id

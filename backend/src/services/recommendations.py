@@ -14,11 +14,6 @@ from utils.cache import CacheKeys, cache_recommendations, cache_available_movies
 # Template directory constant
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent / 'templates' / 'context'
 
-from functools import wraps
-
-
-
-
 class RecommendationTrigger(Enum):
     """Enum for recommendation trigger types"""
     CHATBOT_MESSAGE = "chatbot"
