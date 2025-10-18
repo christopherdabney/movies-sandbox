@@ -1,7 +1,7 @@
 from database import db
 from flask import Blueprint, request, jsonify
 from auth import token_required
-from models import ChatMessage, Movie
+from models import ChatMessage, Movie, Member
 from services import RecommendationsService, RecommendationTrigger
 
 chat_bp = Blueprint('chat', __name__, url_prefix='/chat')
@@ -18,6 +18,16 @@ def post(member_id):
         return jsonify({'error': 'message is required'}), 400
     
     try:
+        # Pre-flight cost check
+        member = Member.query.get(member_id)
+        estimated_cost = estimate_message_cost(member_id, message)
+
+        if member.agent_usage + estimated_cost > Config.AGENT_USAGE_LIMIT:
+            return jsonify({
+                'error': 'Insufficient discussion power',
+                'remaining': Config.AGENT_USAGE_LIMIT - member.agent_usage
+            }), 429
+
         # Save member message
         chat_message = ChatMessage(
             member_id=member_id,

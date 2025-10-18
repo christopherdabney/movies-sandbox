@@ -13,6 +13,7 @@ class Member(db.Model):
     email_verified = db.Column(db.Boolean, default=False, nullable=False)
     verification_token = db.Column(db.String(255), unique=True, nullable=True)
     token_expires_at = db.Column(db.DateTime, nullable=True)
+    agent_usage = db.Column(db.Numeric(10, 6), nullable=False, default=0)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
     
@@ -27,6 +28,7 @@ class Member(db.Model):
             'dateOfBirth': self.date_of_birth.isoformat() if self.date_of_birth else None,
             'age': self.age(),
             'verified': self.email_verified,
+            'agent_usage': self.agent_usage,
         }
     
     def __repr__(self):

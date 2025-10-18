@@ -22,3 +22,9 @@ class Config:
     # chat expiry pushes old chats to active=False
     # this does not delete them, but it removes them from Claude AI api conversation context
     CHAT_EXPIRY_MINUTES = int(os.environ.get('CHAT_EXPIRY_MINUTES', 2))
+
+    # 5 conversations × $0.024
+    # Each conversation consists of 3 back-and-forths with claude ai
+    # at about 100 characters per user message
+    # and accounts for movie db samping, watchlist awareness, and conversation history
+    AGENT_USAGE_LIMIT = 0.12  # $0.12 in US dollars
