@@ -29,6 +29,18 @@ const ChatWidget = () => {
   const { account } = useSelector((state: RootState) => state.account);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
+  const [discussionPower, setDiscussionPower] = useState<{
+    percentage: number;
+    remaining: number;
+  } | null>(null);
+
+  // Fetch discussion power when chat opens or after sending message
+  useEffect(() => {
+    if (isOpen && account) {
+      fetchDiscussionPower();
+    }
+  }, [isOpen, account, messages.length]);
+
   useEffect(() => {
     const handleWatchlistChange = () => {
       loadChatHistory();
@@ -47,30 +59,30 @@ const ChatWidget = () => {
   }, [isOpen, messages]);
 
   // Prevent background scroll when hovering over chat
-useEffect(() => {
-  if (isHovering) {
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-    document.body.style.overflow = 'hidden';
-    document.body.style.paddingRight = `${scrollbarWidth}px`;
-    // Also shift the chat widget
-    if (chatWindowRef.current) {
-      chatWindowRef.current.style.right = `${20 + scrollbarWidth}px`;
+  useEffect(() => {
+    if (isHovering) {
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+      // Also shift the chat widget
+      if (chatWindowRef.current) {
+        chatWindowRef.current.style.right = `${20 + scrollbarWidth}px`;
+      }
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+      if (chatWindowRef.current) {
+        chatWindowRef.current.style.right = '20px';
+      }
     }
-  } else {
-    document.body.style.overflow = '';
-    document.body.style.paddingRight = '';
-    if (chatWindowRef.current) {
-      chatWindowRef.current.style.right = '20px';
-    }
-  }
-  return () => {
-    document.body.style.overflow = '';
-    document.body.style.paddingRight = '';
-    if (chatWindowRef.current) {
-      chatWindowRef.current.style.right = '20px';
-    }
-  };
-}, [isHovering]);
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+      if (chatWindowRef.current) {
+        chatWindowRef.current.style.right = '20px';
+      }
+    };
+  }, [isHovering]);
 
   // Prevent scroll propagation from messages container
   useEffect(() => {
@@ -94,6 +106,27 @@ useEffect(() => {
       messagesContainer.removeEventListener('wheel', handleWheel);
     };
   }, [isOpen]);
+
+  const fetchDiscussionPower = async () => {
+    try {
+      const response = await fetch(API_ENDPOINTS.CHAT.POWER, {
+        credentials: 'include',
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setDiscussionPower({
+          percentage: data.percentage,
+          remaining: data.remaining
+        });
+        console.log('discussion power: ', data.percentage, '%  ', data.remaining, ' remaining');
+      }
+    } catch (error) {
+      console.error('Error fetching discussion power:', error);
+    }
+  };
+
+  
 
   const handleClearChat = async () => {
     try {
@@ -191,6 +224,17 @@ useEffect(() => {
         },
         body: JSON.stringify({ message: inputMessage }),
       });
+
+      if (response.status === 429) {
+        const errorData = await response.json();
+        const errorMessage = { 
+          role: 'assistant' as const, 
+          content: errorData.error || 'Insufficient discussion power to send message.' 
+        };
+        setMessages(prev => [...prev, errorMessage]);
+        setIsLoading(false);
+        return;
+      }
       
       if (!response.ok) {
         throw new Error('Failed to get response');

@@ -6,7 +6,8 @@ from anthropic import Anthropic
 # Default configuration constants
 DEFAULT_MODEL = "claude-sonnet-4-20250514"
 DEFAULT_MAX_TOKENS = 300
-
+INPUT_TOKEN_COST = 0.000003
+OUTPUT_TOKEN_COST = 0.000015
 
 class ClaudeClient:
     """Wrapper for Claude API interactions"""
@@ -125,3 +126,23 @@ class ClaudeClient:
         
         # Fallback if JSON parsing fails
         return {'message': response_text, 'recommendations': []}
+
+    # Add this method to ClaudeClient class
+    def get_usage_cost(self):
+        """
+        Calculate actual cost from the last API call
+        
+        Returns:
+            float: Cost in USD
+            
+        Raises:
+            RuntimeError: If query() hasn't been called yet
+        """
+        if self._raw_response is None:
+            raise RuntimeError("No response available. Call query() first.")
+        
+        usage = self._raw_response.usage
+        input_cost = usage.input_tokens * INPUT_TOKEN_COST
+        output_cost = usage.output_tokens * OUTPUT_TOKEN_COST
+        
+        return input_cost + output_cost

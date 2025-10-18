@@ -3,6 +3,8 @@ from flask import Blueprint, request, jsonify
 from auth import token_required
 from models import ChatMessage, Movie, Member
 from services import RecommendationsService, RecommendationTrigger
+from config import Config
+from utils.cost_estimation import estimate_message_cost
 
 chat_bp = Blueprint('chat', __name__, url_prefix='/chat')
 
@@ -22,10 +24,10 @@ def post(member_id):
         member = Member.query.get(member_id)
         estimated_cost = estimate_message_cost(member_id, message)
 
-        if member.agent_usage + estimated_cost > Config.AGENT_USAGE_LIMIT:
+        if float(member.agent_usage) + estimated_cost > Config.AGENT_USAGE_LIMIT:
             return jsonify({
                 'error': 'Insufficient discussion power',
-                'remaining': Config.AGENT_USAGE_LIMIT - member.agent_usage
+                'remaining': Config.AGENT_USAGE_LIMIT - float(member.agent_usage)
             }), 429
 
         # Save member message
@@ -50,7 +52,9 @@ def post(member_id):
             recommended_movie_ids=movie_ids if movie_ids else None
         )
         db.session.add(assistant_chat_message)
-
+        #member.agent_usage = member.agent_usage + estimated_cost
+        actual_cost = rs.claude_client.get_usage_cost()
+        member.agent_usage = float(member.agent_usage) + actual_cost
         # COMMIT BOTH TOGETHER - only once at the end
         db.session.commit()
 
@@ -101,6 +105,20 @@ def get(member_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@chat_bp.route('/discussion-power', methods=['GET'])
+@token_required
+def get_discussion_power(member_id):
+    member = Member.query.get(member_id)
+    
+    remaining = Config.AGENT_USAGE_LIMIT - float(member.agent_usage)
+    percentage = (float(member.agent_usage) / Config.AGENT_USAGE_LIMIT) * 100
+    
+    return jsonify({
+        'used': float(member.agent_usage),
+        'limit': Config.AGENT_USAGE_LIMIT,
+        'remaining': remaining,
+        'percentage': min(percentage, 100)
+    }), 200
 
 @chat_bp.route('/clear', methods=['DELETE'])
 @token_required

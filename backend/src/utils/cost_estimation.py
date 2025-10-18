@@ -1,44 +1,42 @@
 from anthropic import Anthropic
 from models import ChatMessage
-from config import Config
 import os
 
-# Pricing constants (per token)
-INPUT_TOKEN_COST = 0.000003  # $3 per million
-OUTPUT_TOKEN_COST = 0.000015  # $15 per million
-MAX_OUTPUT_TOKENS = 300  # from ClaudeClient
+# Pricing constants
+INPUT_TOKEN_COST = 0.000003
+OUTPUT_TOKEN_COST = 0.000015
+ESTIMATED_SYSTEM_TOKENS = 3875
+MAX_OUTPUT_TOKENS = 300
 
 def estimate_message_cost(member_id, user_message):
     """
-    Estimate the cost of sending a message to Claude
+    Estimate cost before sending message to Claude
     
-    Args:
-        member_id: Member's ID
-        user_message: The user's message text
-        
     Returns:
         float: Estimated cost in USD
     """
     client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
     
-    # Build the messages array (same as RS does)
-    chat_history = ChatMessage.query\
+    # Get active chat history
+    history = ChatMessage.query\
         .filter_by(member_id=member_id, active=True)\
         .order_by(ChatMessage.created_at.asc())\
         .all()
     
-    messages = []
-    for msg in chat_history:
-        messages.append({"role": msg.role, "content": msg.content})
+    # Build messages for token counting
+    messages = [{"role": msg.role, "content": msg.content} for msg in history]
     messages.append({"role": "user", "content": user_message})
     
-    # Count input tokens (would need system context too, but approximating)
-    # For accurate count, you'd need to pass the full system context
-    # For now, estimate: ~3875 tokens for system + message history
-    input_tokens = 3875 + client.count_tokens(str(messages))
+    # Count tokens using the beta method
+    history_tokens = client.beta.messages.count_tokens(
+        model="claude-sonnet-4-20250514",
+        messages=messages
+    ).input_tokens
     
-    # Estimate cost
-    input_cost = input_tokens * INPUT_TOKEN_COST
+    total_input_tokens = ESTIMATED_SYSTEM_TOKENS + history_tokens
+    
+    # Calculate cost
+    input_cost = total_input_tokens * INPUT_TOKEN_COST
     output_cost = MAX_OUTPUT_TOKENS * OUTPUT_TOKEN_COST
     
     return input_cost + output_cost
