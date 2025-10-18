@@ -34,13 +34,6 @@ const ChatWidget = () => {
     remaining: number;
   } | null>(null);
 
-  // Fetch discussion power when chat opens or after sending message
-  useEffect(() => {
-    if (isOpen && account) {
-      fetchDiscussionPower();
-    }
-  }, [isOpen, account, messages.length]);
-
   useEffect(() => {
     const handleWatchlistChange = () => {
       loadChatHistory();
@@ -107,27 +100,6 @@ const ChatWidget = () => {
     };
   }, [isOpen]);
 
-  const fetchDiscussionPower = async () => {
-    try {
-      const response = await fetch(API_ENDPOINTS.CHAT.POWER, {
-        credentials: 'include',
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setDiscussionPower({
-          percentage: data.percentage,
-          remaining: data.remaining
-        });
-        console.log('discussion power: ', data.percentage, '%  ', data.remaining, ' remaining');
-      }
-    } catch (error) {
-      console.error('Error fetching discussion power:', error);
-    }
-  };
-
-  
-
   const handleClearChat = async () => {
     try {
       const response = await fetch(API_ENDPOINTS.CHAT.CLEAR, {
@@ -174,8 +146,11 @@ const ChatWidget = () => {
       const response = await fetch(API_ENDPOINTS.CHAT.HISTORY, {
         credentials: 'include',
       });
+
+      console.log('loadChatHistory', response);
       
       if (response.ok) {
+        console.log('loadChatHistory ok');
         const data = await response.json();
         setMessages(data.messages.map((msg: any) => ({
           role: msg.role,
@@ -183,6 +158,14 @@ const ChatWidget = () => {
           recommendations: msg.recommendations || [],
           active: msg.active
         })));
+        console.log('loadChatHistory power', data.power);
+        setDiscussionPower({
+          percentage: data.power.percentage,
+          remaining: data.power.remaining
+        });
+        console.log(
+          'discussion power: ', data.power.percentage, '%  ', 
+          data.power.remaining, ' remaining');
       }
       setHistoryLoaded(true);
     } catch (error) {

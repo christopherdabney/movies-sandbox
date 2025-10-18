@@ -5,6 +5,7 @@ from models import ChatMessage, Movie, Member
 from services import RecommendationsService, RecommendationTrigger
 from config import Config
 from utils.cost_estimation import estimate_message_cost
+from utils.discussion_power import get_discussion_power
 
 chat_bp = Blueprint('chat', __name__, url_prefix='/chat')
 
@@ -31,11 +32,7 @@ def post(member_id):
             }), 429
 
         # Save member message
-        chat_message = ChatMessage(
-            member_id=member_id,
-            role=ROLE_USER,
-            content=message
-        )
+        chat_message = ChatMessage(member_id=member_id, role=ROLE_USER, content=message)
         db.session.add(chat_message)
 
         # Get recommendation from ChatService
@@ -52,15 +49,14 @@ def post(member_id):
             recommended_movie_ids=movie_ids if movie_ids else None
         )
         db.session.add(assistant_chat_message)
-        #member.agent_usage = member.agent_usage + estimated_cost
         actual_cost = rs.claude_client.get_usage_cost()
         member.agent_usage = float(member.agent_usage) + actual_cost
-        # COMMIT BOTH TOGETHER - only once at the end
         db.session.commit()
 
         return jsonify({
             'message': result['message'],
-            'recommendations': serialized_movies
+            'recommendations': serialized_movies,
+            'power': get_discussion_power(member),
         }), 200
         
     except Exception as e:
@@ -77,12 +73,10 @@ def get(member_id):
     try:
         # checks whether older messages should be expired before querying chat
         ChatMessage.expire_all(member_id, with_commit=True)
-
         messages = ChatMessage.query\
             .filter_by(member_id=member_id)\
             .order_by(ChatMessage.created_at.asc())\
             .all()
-        
         # Hydrate messages with full movie data
         result = []
         for msg in messages:
@@ -96,29 +90,15 @@ def get(member_id):
                 msg_dict['recommendations'] = []
             
             result.append(msg_dict)
-
+        member = Member.query.get(member_id)
         return jsonify({
             'messages': result,
-            'count': len(result)
+            'count': len(result),
+            'power': v,
         }), 200
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-@chat_bp.route('/discussion-power', methods=['GET'])
-@token_required
-def get_discussion_power(member_id):
-    member = Member.query.get(member_id)
-    
-    remaining = Config.AGENT_USAGE_LIMIT - float(member.agent_usage)
-    percentage = (float(member.agent_usage) / Config.AGENT_USAGE_LIMIT) * 100
-    
-    return jsonify({
-        'used': float(member.agent_usage),
-        'limit': Config.AGENT_USAGE_LIMIT,
-        'remaining': remaining,
-        'percentage': min(percentage, 100)
-    }), 200
 
 @chat_bp.route('/clear', methods=['DELETE'])
 @token_required

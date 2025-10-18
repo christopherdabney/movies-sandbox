@@ -154,6 +154,10 @@ upgrade:
 tree:
 	tree -I 'node_modules|venv|__pycache__|*.pyc|*.db'
 
+.PHONY: query-members
+members:
+	@psql movies_dev -c "SELECT id, email, first_name, last_name, date_of_birth, email_verified, agent_usage FROM member;"
+
 # Show help
 help:
 	@echo "Available targets:"
