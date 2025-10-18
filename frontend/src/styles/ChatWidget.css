@@ -245,3 +245,43 @@
 .confirm-delete-btn:hover {
   background: #5a6268;
 }
+
+.chat-verification-required {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.chat-verification-required h3 {
+  color: #333;
+  margin: 0 0 16px 0;
+  font-size: 18px;
+}
+
+.chat-verification-required p {
+  color: #666;
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.resend-verification-btn {
+  margin-top: 16px;
+  padding: 12px 24px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.resend-verification-btn:hover {
+  background: #5568d3;
+}

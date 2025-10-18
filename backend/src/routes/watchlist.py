@@ -176,8 +176,15 @@ def overview(member_id):
     reason = ''
     serialized_movies = []
     
+    # Priority 0: Unverified
+    if not member.email_verified:
+        print('TRIGGER: UNVERIFIED')
+        rs = RecommendationsService(member_id)
+        result = rs.get(trigger=RecommendationTrigger.DATABASE_RANDOM)
+        serialized_movies = Movie.hydrate(result.get('recommendations', []))
+        reason = 'Fresh picks from our collection'
     # Priority 1: Birthday/unlock trigger
-    if (
+    elif (
         member.birthday_within_last_month() 
         and age_unlocks_ratings(member.age_last_year(), member.age())
     ):

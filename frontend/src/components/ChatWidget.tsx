@@ -235,52 +235,72 @@ useEffect(() => {
             </div>
           </div>
                     
-          <div className="chat-messages" ref={messagesContainerRef}>
-            {showClearConfirm ? (
-              <div className="chat-confirm">
-                <p>Are you sure you want to clear your chat history? This cannot be undone.</p>
-                <div className="chat-confirm-actions">
-                  <button onClick={handleCancelClear} className="confirm-cancel-btn">
-                    Cancel
-                  </button>
-                  <button onClick={handleClearChat} className="confirm-delete-btn">
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <>
-                {messages.length === 0 ? (
-                  <div className="chat-welcome">
-                    👋 Hi! Ask me for movie recommendations!
+          {account && !account.verified ? (
+            <div className="chat-verification-required">
+              <h3>Email Verification Required</h3>
+              <p>Please verify your email to use the chatbot.</p>
+              <p>AI features are restricted to verified users only.</p>
+              <button 
+                onClick={async () => {
+                  const response = await fetch(API_ENDPOINTS.MEMBER.RESEND, {
+                    method: 'POST',
+                    credentials: 'include'
+                  });
+                  if (response.ok) alert('Verification email sent!');
+                }}
+                className="resend-verification-btn"
+              >
+                Resend Verification Email
+              </button>
+            </div>
+          ) : (
+            <div className="chat-messages" ref={messagesContainerRef}>
+              {showClearConfirm ? (
+                <div className="chat-confirm">
+                  <p>Are you sure you want to clear your chat history? This cannot be undone.</p>
+                  <div className="chat-confirm-actions">
+                    <button onClick={handleCancelClear} className="confirm-cancel-btn">
+                      Cancel
+                    </button>
+                    <button onClick={handleClearChat} className="confirm-delete-btn">
+                      Delete
+                    </button>
                   </div>
-                ) : (
-                  messages.map((msg, idx) => (
-                    <div key={idx}>
-                      <div className={`chat-message ${msg.role}${msg.active === false ? ' inactive' : ''}`}>
-                        {msg.content}
-                      </div>
-                      {msg.role === 'assistant' && msg.recommendations && msg.recommendations.length > 0 && (
-                        <div className="recommendations-container">
-                          {msg.recommendations.map((movie) => (
-                            <MovieRecommendationTile 
-                              key={movie.id} 
-                              movie={movie}
-                              reason={movie.reason}
-                            />
-                          ))}
-                        </div>
-                      )}
+                </div>
+              ) : (
+                <>
+                  {messages.length === 0 ? (
+                    <div className="chat-welcome">
+                      👋 Hi! Ask me for movie recommendations!
                     </div>
-                  ))
-                )}
-                {isLoading && <div className="chat-loading">Claude is thinking...</div>}
-                <div ref={messagesEndRef} />
-              </>
-            )}
-          </div>
+                  ) : (
+                    messages.map((msg, idx) => (
+                      <div key={idx}>
+                        <div className={`chat-message ${msg.role}${msg.active === false ? ' inactive' : ''}`}>
+                          {msg.content}
+                        </div>
+                        {msg.role === 'assistant' && msg.recommendations && msg.recommendations.length > 0 && (
+                          <div className="recommendations-container">
+                            {msg.recommendations.map((movie) => (
+                              <MovieRecommendationTile 
+                                key={movie.id} 
+                                movie={movie}
+                                reason={movie.reason}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                  {isLoading && <div className="chat-loading">Claude is thinking...</div>}
+                  <div ref={messagesEndRef} />
+                </>
+              )}
+            </div>
+          )}
 
-          {!showClearConfirm && (
+          {account?.verified && !showClearConfirm && (
             <div className="chat-input">
               <textarea
                 value={inputMessage}
