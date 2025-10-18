@@ -1,10 +1,15 @@
 import bcrypt
 import jwt
+import os
+import secrets
 
+from datetime import date, datetime, timedelta
 from config import Config
-from datetime import datetime, timedelta
 from functools import wraps
 from flask import request, jsonify
+
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 AUTHENTICATION_COOKIE = 'auth_token'
 AUTHENTICATION_LIFETIME = 30  # minutes
@@ -42,6 +47,38 @@ def remove_token(response, secure=False):
         path='/',
     )
     return response
+
+
+def send_verification_email(member):
+    token = secrets.token_urlsafe(32)
+    member.verification_token = token
+    member.token_expires_at = datetime.utcnow() + timedelta(hours=10)  #TODO: hardcoded expiry
+    
+    # Construct verification link
+    verification_link = f"http://localhost:5173/verify-email/{token}"  # TODO: hardcoded URL
+    print(verification_link)
+
+    # After user is created in DB
+    message = Mail(
+        from_email='noreply@dabneystudios.com',
+        to_emails=member.email,
+        subject='Welcome! Verify your email address.',
+        html_content=f'''                                               # TODO jinja html template
+            <h2>Welcome to Movie App!</h2>
+            <p>Please verify your email address by clicking the link below:</p>
+            <a href="{verification_link}">Verify Email</a>
+            <p>This link expires in 24 hours.</p>
+        '''
+    )
+
+    try:
+        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        response = sg.send(message)
+        print(f"Email sent: {response.status_code}")  # Email sent: 202
+    except Exception as e:
+        print(f"Error sending email: {e}")
+
+
 
 def token_required(f):
     @wraps(f)

@@ -7,6 +7,8 @@ export const API_ENDPOINTS = {
     LOGIN: `${API_BASE_URL}/member/login`, 
     LOGOUT: `${API_BASE_URL}/member/logout`,
     ACCOUNT: `${API_BASE_URL}/member`,
+    VERIFY: `${API_BASE_URL}/member/verify-email`,
+    RESEND: `${API_BASE_URL}/member/resend-verification`,
   },
   MOVIES: {
     LIST: `${API_BASE_URL}/movies`,

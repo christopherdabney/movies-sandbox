@@ -1,13 +1,20 @@
-import os
+
+
 from flask import Blueprint, request, jsonify, make_response
 from sqlalchemy.exc import IntegrityError
-from auth import token_required, add_token, remove_token, hash_password, check_password
+from auth import (
+    token_required, 
+    add_token, 
+    remove_token, 
+    hash_password, 
+    check_password,
+    send_verification_email,
+)
 from database import db
 from models import Member
-from datetime import date
+from datetime import date, datetime
 from utils.movies import get_rating, AGE_UNLOCK_ALL
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+
 
 membership_bp = Blueprint('membership', __name__, url_prefix='/member')
 
@@ -19,6 +26,7 @@ def get(member_id):
         member_dict = member.to_dict()
         age = member.age()
         member_dict['rating'] = get_rating(age) if age < AGE_UNLOCK_ALL else 'ALL'
+        print(member_dict)
         return jsonify(member_dict)
     return jsonify({'error': 'Member not found'}), 404
 
@@ -51,38 +59,59 @@ def post():
 
     try:
         # Create new member using SQLAlchemy
-        new_member = Member(
+        member = Member(
             email=data.get('email'),
             password_hash=hash_password(data.get('password')),
             first_name=data.get('firstName'),
             last_name=data.get('lastName'),
             date_of_birth=date_of_birth,
         )
-        
+
+        send_verification_email(member)
+
         # Add and commit to database
-        db.session.add(new_member)
+        db.session.add(member)
         db.session.commit()
-
-        # After user is created in DB
-        message = Mail(
-            from_email='noreply@dabneystudios.com',
-            to_emails=data.get('email'),
-            subject='Welcome to our Movie Recommendations App!',
-            html_content='Thanks for joining us!'
-        )
-
-        try:
-            sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-            response = sg.send(message)
-            print(f"Email sent: {response.status_code}")
-        except Exception as e:
-            print(f"Error sending email: {e}")
 
         return add_token(
             make_response(jsonify({'message': 'Member registered'})), 
-            new_member.id
+            member.id
         )
         
     except IntegrityError:
         db.session.rollback()
         return jsonify({'error': 'Duplicate Member record attempted'}), 409
+
+@membership_bp.route('/resend-verification', methods=['POST'])
+@token_required
+def resend_verification(member_id):
+    member = Member.query.get(member_id)
+    if member:
+        # Generate new token, send email
+        send_verification_email(member)
+        db.session.commit()
+        return jsonify({'message': 'Verification link resent'})
+    return jsonify({'error': 'Member not found'}), 404
+
+@membership_bp.route('/verify-email/<token>', methods=['GET'])
+def verify_email(token):
+    member = Member.query.filter_by(verification_token=token).first()
+
+    if not member:
+        return jsonify({'error': 'Invalid verification token'}), 400
+
+    # Check if token expired
+    if member.token_expires_at < datetime.utcnow():
+        return jsonify({'error': 'Verification token has expired'}), 400
+
+    # Check if already verified
+    if member.email_verified:
+        return jsonify({'message': 'Email already verified'}), 200
+
+    # Mark as verified
+    member.email_verified = True
+    member.verification_token = None
+    member.token_expires_at = None
+
+    db.session.commit()
+    return jsonify({'message': 'Email verified successfully'}), 200

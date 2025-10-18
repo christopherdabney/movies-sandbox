@@ -32,6 +32,8 @@ function Home() {
   const hasInteractedRef = useRef(false)
   const [needsInfiniteScroll, setNeedsInfiniteScroll] = useState(false);
 
+  //console.log(account);
+
   // Auto-scroll effect
   useEffect(() => {
     if (carouselRef.current && overview?.recommendations?.movies?.length && !hasInteractedRef.current && needsInfiniteScroll) {
@@ -179,10 +181,43 @@ function Home() {
   return (
     <div className="home-container">
       <div className="home-content">
+        {account && !account.verified && (
+          <div className="unverified-message">
+            <span><strong>Please verify your email address</strong></span>
+            <span>Check your inbox for the verification link.</span>
+            <span>
+              <button 
+                onClick={async () => {
+                  console.log('checkpoint 1');
+                  try {
+                    console.log(API_ENDPOINTS.MEMBER.RESEND);
+                    const response = await fetch(API_ENDPOINTS.MEMBER.RESEND, {
+                      method: 'POST',
+                      credentials: 'include'
+                    });
+                    if (response.ok) {
+                      alert('Verification email sent! Check your inbox.');
+                    } else {
+                      alert('Failed to resend email. Try again later.');
+                    }
+                  } catch (error) {
+                    alert('Error sending email.');
+                  }
+                }}
+                className="unverified-message"
+              >
+                Resend Verification Email
+              </button>
+            </span>
+          </div>
+        )}
         <h1 className="welcome-message">Welcome {account.firstName}</h1>
-        
         <div className="user-info">
-          <div>Age: {account.age}, Unlocked Rating: { account.rating}</div>
+          <div>
+            Age: {account.age} | 
+            {account.verified ? 'verified' : 'unverified'} | 
+            Unlocked Rating: { account.rating}
+          </div>
         </div>
 
         <table className="stats-table">

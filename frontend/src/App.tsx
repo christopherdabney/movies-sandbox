@@ -8,10 +8,12 @@ import MyMovies from './pages/MyMovies.tsx'
 import MovieDetail from './pages/MovieDetail.tsx'
 import Navigation from './Navigation.tsx'
 import ChatWidget from './components/ChatWidget'
+import VerifyEmail from './pages/VerifyEmail';
 
 import { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { accountRecord } from './store/accountSlice'
+
 import type { AppDispatch } from './store/store'
 
 import './styles/App.css'
@@ -35,6 +37,7 @@ function App() {
           <Route path="/movies/:id" element={<MovieDetail />} />
           <Route path="register" element={<Register />} />
           <Route path="login" element={<Login />} />
+          <Route path="/verify-email/:token" element={<VerifyEmail />} />
           <Route path="home" element={
             <ProtectedRoute>
               <Home />

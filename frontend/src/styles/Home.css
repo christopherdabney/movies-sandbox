@@ -15,6 +15,25 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
+.unverified-message {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 5px;
+  margin-bottom: 5px;
+}
+
+.unverified-message button {
+  padding:  10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
 .welcome-message {
   color: #333;
   font-size: 32px;
