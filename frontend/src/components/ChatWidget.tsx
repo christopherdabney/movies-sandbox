@@ -21,7 +21,6 @@ const ChatWidget = () => {
   
   const [isHovering, setIsHovering] = useState(false);
 
-  // Add ref for messages container
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatWindowRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -32,6 +31,8 @@ const ChatWidget = () => {
   const [discussionPower, setDiscussionPower] = useState<{
     percentage: number;
     remaining: number;
+    used: number;
+    limit: number;
   } | null>(null);
 
   useEffect(() => {
@@ -43,21 +44,17 @@ const ChatWidget = () => {
     return () => window.removeEventListener('watchlist-changed', handleWatchlistChange);
   }, []);
 
-  // Scroll to bottom when messages change
   useEffect(() => {
-    // Only scroll if opening the chat and there are messages
     if (isOpen && messages.length > 0) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [isOpen, messages]);
 
-  // Prevent background scroll when hovering over chat
   useEffect(() => {
     if (isHovering) {
       const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
       document.body.style.paddingRight = `${scrollbarWidth}px`;
-      // Also shift the chat widget
       if (chatWindowRef.current) {
         chatWindowRef.current.style.right = `${20 + scrollbarWidth}px`;
       }
@@ -77,7 +74,6 @@ const ChatWidget = () => {
     };
   }, [isHovering]);
 
-  // Prevent scroll propagation from messages container
   useEffect(() => {
     const messagesContainer = messagesContainerRef.current;
     if (!messagesContainer) return;
@@ -87,7 +83,6 @@ const ChatWidget = () => {
       const isAtTop = scrollTop === 0;
       const isAtBottom = scrollTop + clientHeight >= scrollHeight;
 
-      // Prevent scroll propagation in all cases
       if ((e.deltaY < 0 && isAtTop) || (e.deltaY > 0 && isAtBottom) || (!isAtTop && !isAtBottom)) {
         e.stopPropagation();
       }
@@ -122,7 +117,6 @@ const ChatWidget = () => {
     setShowClearConfirm(false);
   };
 
-  // Clear chat on logout
   useEffect(() => {
     const handleLogout = () => {
       setMessages([]);
@@ -134,23 +128,21 @@ const ChatWidget = () => {
     return () => window.removeEventListener('user-logout', handleLogout);
   }, []);
 
-  // Load chat history when widget opens
   useEffect(() => {
-    if (isOpen && !historyLoaded) {
+    console.log('Load history effect triggered:', { isOpen, historyLoaded, verified: account?.verified });
+    if (isOpen && !historyLoaded && account?.verified) {
+      console.log('Calling loadChatHistory()');
       loadChatHistory();
     }
-  }, [isOpen]);
+  }, [isOpen, historyLoaded, account]);
 
   const loadChatHistory = async () => {
     try {
       const response = await fetch(API_ENDPOINTS.CHAT.HISTORY, {
         credentials: 'include',
       });
-
-      console.log('loadChatHistory', response);
       
       if (response.ok) {
-        console.log('loadChatHistory ok');
         const data = await response.json();
         setMessages(data.messages.map((msg: any) => ({
           role: msg.role,
@@ -158,14 +150,13 @@ const ChatWidget = () => {
           recommendations: msg.recommendations || [],
           active: msg.active
         })));
-        console.log('loadChatHistory power', data.power);
-        setDiscussionPower({
-          percentage: data.power.percentage,
-          remaining: data.power.remaining
-        });
-        console.log(
-          'discussion power: ', data.power.percentage, '%  ', 
-          data.power.remaining, ' remaining');
+        
+        if (data.power) {
+          setDiscussionPower({
+            percentage: data.power.percentage,
+            remaining: data.power.remaining
+          });
+        }
       }
       setHistoryLoaded(true);
     } catch (error) {
@@ -184,15 +175,15 @@ const ChatWidget = () => {
     }
     setIsOpen(!isOpen);
     if (isOpen) {
-      // Closing chat, ensure scroll lock is reset
       setIsHovering(false);
     }
   };
 
+  const isOutOfPower = discussionPower ? discussionPower.used > discussionPower.limit : false;
+
   const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
+    if (!inputMessage.trim() || isOutOfPower) return;
     
-    // Add user message to chat
     const userMessage = { role: 'user' as const, content: inputMessage };
     setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
@@ -225,13 +216,21 @@ const ChatWidget = () => {
       
       const data = await response.json();
       
-      // Add Claude's response to chat
       const assistantMessage = { 
         role: 'assistant' as const, 
         content: data.message,
         recommendations: data.recommendations || []
       };
       setMessages(prev => [...prev, assistantMessage]);
+      
+      if (data.power) {
+        setDiscussionPower({
+          percentage: data.power.percentage,
+          remaining: data.power.remaining,
+          used: data.power.used,
+          limit: data.power.limit
+        });
+      }
       
     } catch (error) {
       console.error('Error sending message:', error);
@@ -247,7 +246,6 @@ const ChatWidget = () => {
 
   return (
     <>
-      {/* Chat window */}
       {isOpen && (
         <div 
           className="chat-window" 
@@ -261,6 +259,20 @@ const ChatWidget = () => {
               <button onClick={toggleChat} title="Minimize">−</button>
             </div>
           </div>
+          
+          {discussionPower && (
+            <div className="discussion-power-container">
+              <div className="discussion-power-bar">
+                <div 
+                  className="discussion-power-fill"
+                  style={{ width: `${discussionPower.percentage}%` }}
+                />
+              </div>
+              <div className="discussion-power-label">
+                Discussion Power: ${discussionPower.remaining.toFixed(3)} remaining
+              </div>
+            </div>
+          )}
                     
           {account && !account.verified ? (
             <div className="chat-verification-required">
@@ -332,17 +344,24 @@ const ChatWidget = () => {
               <textarea
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                placeholder="Ask for a movie recommendation..."
+                placeholder={isOutOfPower ? "Discussion power depleted - no more messages available" : "Ask for a movie recommendation..."}
                 onKeyPress={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
+                  if (e.key === 'Enter' && !e.shiftKey && !isOutOfPower) {
                     e.preventDefault();
                     handleSendMessage();
                   }
                 }}
                 rows={2}
+                disabled={isOutOfPower}
               />
               <div className="chat-input-buttons">
-                <button onClick={handleSendMessage} className="send-btn">Send</button>
+                <button 
+                  onClick={handleSendMessage} 
+                  className="send-btn"
+                  disabled={isOutOfPower || !inputMessage.trim()}
+                >
+                  Send
+                </button>
                 {messages.length > 0 && (
                   <button 
                     onClick={() => setShowClearConfirm(true)} 

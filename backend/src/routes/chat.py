@@ -4,7 +4,6 @@ from auth import token_required
 from models import ChatMessage, Movie, Member
 from services import RecommendationsService, RecommendationTrigger
 from config import Config
-from utils.cost_estimation import estimate_message_cost
 from utils.discussion_power import get_discussion_power
 
 chat_bp = Blueprint('chat', __name__, url_prefix='/chat')
@@ -23,9 +22,7 @@ def post(member_id):
     try:
         # Pre-flight cost check
         member = Member.query.get(member_id)
-        estimated_cost = estimate_message_cost(member_id, message)
-
-        if float(member.agent_usage) + estimated_cost > Config.AGENT_USAGE_LIMIT:
+        if float(member.agent_usage) >= Config.AGENT_USAGE_LIMIT:
             return jsonify({
                 'error': 'Insufficient discussion power',
                 'remaining': Config.AGENT_USAGE_LIMIT - float(member.agent_usage)
@@ -94,7 +91,7 @@ def get(member_id):
         return jsonify({
             'messages': result,
             'count': len(result),
-            'power': v,
+            'power': get_discussion_power(member),
         }), 200
         
     except Exception as e:
