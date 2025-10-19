@@ -28,5 +28,17 @@ export const WatchlistFilterValue = {
   WATCHED: WatchlistStatus.WATCHED,
 } as const;
 
+export interface OverviewResponse {
+  watchlist: {
+    total: number;
+    queued: number;
+    watched: number;
+  };
+  recommendations: {
+    movies: Movie[];
+    reason: string;
+  };
+}
+
 // Type for filter values (union of possible string values)
 export type WatchlistFilter = typeof WatchlistFilterValue[keyof typeof WatchlistFilterValue];

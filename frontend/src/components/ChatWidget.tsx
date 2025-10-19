@@ -129,9 +129,7 @@ const ChatWidget = () => {
   }, []);
 
   useEffect(() => {
-    console.log('Load history effect triggered:', { isOpen, historyLoaded, verified: account?.verified });
     if (isOpen && !historyLoaded && account?.verified) {
-      console.log('Calling loadChatHistory()');
       loadChatHistory();
     }
   }, [isOpen, historyLoaded, account]);

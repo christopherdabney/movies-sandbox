@@ -27,4 +27,4 @@ class Config:
     # Each conversation consists of 3 back-and-forths with claude ai
     # at about 100 characters per user message
     # and accounts for movie db samping, watchlist awareness, and conversation history
-    AGENT_USAGE_LIMIT = 0.12  # $0.12 in US dollars
+    AGENT_USAGE_LIMIT = 0.05  # $0.12 in US dollars

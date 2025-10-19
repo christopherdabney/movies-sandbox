@@ -1,3 +1,4 @@
+from config import Config
 from database import db
 from datetime import date, timedelta
 
@@ -28,7 +29,7 @@ class Member(db.Model):
             'dateOfBirth': self.date_of_birth.isoformat() if self.date_of_birth else None,
             'age': self.age(),
             'verified': self.email_verified,
-            'agent_usage': self.agent_usage,
+            'power': self.discussion_power(),
         }
     
     def __repr__(self):
@@ -69,3 +70,22 @@ class Member(db.Model):
         days_since_birthday = (today - birthday_this_year).days
         # Was birthday less than 30 days ago, but not in the future
         return 0 <= days_since_birthday <= 30
+
+    def discussion_power(self):
+        used = float(self.agent_usage)
+        limit = Config.AGENT_USAGE_LIMIT
+        remaining = limit - used
+        percentage = (used / limit) * 100
+        
+        return {
+            'used': used,
+            'limit': limit,
+            'remaining': remaining,
+            'percentage': min(percentage, 100)
+        }
+
+    def has_discussion_power(self):
+        return float(self.agent_usage) < Config.AGENT_USAGE_LIMIT
+
+    def remaining_discussion_power(self):
+        return Config.AGENT_USAGE_LIMIT - float(self.agent_usage)

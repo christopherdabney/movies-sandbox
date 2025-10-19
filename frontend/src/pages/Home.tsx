@@ -5,20 +5,8 @@ import { accountRecord } from '../store/accountSlice'
 import type { AppDispatch, RootState } from '../store/store'
 import { API_ENDPOINTS } from '../constants/api'
 import MovieTile from '../components/MovieTile'
-import type { Movie } from '../types'
+import type { Movie, OverviewResponse } from '../types'
 import './../styles/Home.css'
-
-interface OverviewResponse {
-  watchlist: {
-    total: number;
-    queued: number;
-    watched: number;
-  };
-  recommendations: {
-    movies: Movie[];
-    reason: string;
-  };
-}
 
 function Home() {
   const dispatch = useDispatch<AppDispatch>()
@@ -177,6 +165,7 @@ function Home() {
   if (!account || loading) {
     return null
   }
+  console.log(account);
 
   return (
     <div className="home-container">
@@ -215,24 +204,22 @@ function Home() {
         <div className="user-info">
           <div>
             Age: {account.age} | 
-            {account.verified ? 'verified' : 'unverified'} | 
-            Unlocked Rating: { account.rating}
+            {account.verified ? ' verified' : ' unverified'} | 
+            Unlocked Rating: { account.rating} |
+            Discussion Power Remaining { account.power.percentage - 100.0 }%
           </div>
         </div>
 
         <table className="stats-table">
           <tbody>
             <tr>
-              <td>Watched films:</td>
-              <td>{stats.watched}</td>
+              <td>Watched films:</td><td>{stats.watched}</td>
             </tr>
             <tr>
-              <td>Queue films:</td>
-              <td>{stats.queued}</td>
+              <td>Queue films:</td><td>{stats.queued}</td>
             </tr>
             <tr>
-              <td>Total films:</td>
-              <td>{stats.total}</td>
+              <td>Total films:</td><td>{stats.total}</td>
             </tr>
           </tbody>
         </table>

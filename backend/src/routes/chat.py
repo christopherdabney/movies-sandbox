@@ -3,8 +3,6 @@ from flask import Blueprint, request, jsonify
 from auth import token_required
 from models import ChatMessage, Movie, Member
 from services import RecommendationsService, RecommendationTrigger
-from config import Config
-from utils.discussion_power import get_discussion_power
 
 chat_bp = Blueprint('chat', __name__, url_prefix='/chat')
 
@@ -22,10 +20,10 @@ def post(member_id):
     try:
         # Pre-flight cost check
         member = Member.query.get(member_id)
-        if float(member.agent_usage) >= Config.AGENT_USAGE_LIMIT:
+        if not member.has_discussion_power():
             return jsonify({
                 'error': 'Insufficient discussion power',
-                'remaining': Config.AGENT_USAGE_LIMIT - float(member.agent_usage)
+                'remaining': member.remaining_discussion_power(),
             }), 429
 
         # Save member message
@@ -53,7 +51,7 @@ def post(member_id):
         return jsonify({
             'message': result['message'],
             'recommendations': serialized_movies,
-            'power': get_discussion_power(member),
+            'power': member.discussion_power(),
         }), 200
         
     except Exception as e:
@@ -91,7 +89,7 @@ def get(member_id):
         return jsonify({
             'messages': result,
             'count': len(result),
-            'power': get_discussion_power(member),
+            'power': member.discussion_power(),
         }), 200
         
     except Exception as e:

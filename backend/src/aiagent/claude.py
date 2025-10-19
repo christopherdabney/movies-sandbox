@@ -61,11 +61,17 @@ class ClaudeClient:
         if not self.messages:
             raise ValueError("Messages not configured. Call configure() first.")
         
-        # Make API call
+        # Make API call with caching
         self._raw_response = self.client.messages.create(
             model=self.model,
             max_tokens=self.max_tokens,
-            system=self.system_context,
+            system=[
+                {
+                    "type": "text",
+                    "text": self.system_context,
+                    "cache_control": {"type": "ephemeral"}
+                }
+            ],
             messages=self.messages
         )
         
@@ -127,7 +133,6 @@ class ClaudeClient:
         # Fallback if JSON parsing fails
         return {'message': response_text, 'recommendations': []}
 
-    # Add this method to ClaudeClient class
     def get_usage_cost(self):
         """
         Calculate actual cost from the last API call
@@ -142,7 +147,13 @@ class ClaudeClient:
             raise RuntimeError("No response available. Call query() first.")
         
         usage = self._raw_response.usage
+        
+        # Regular tokens
         input_cost = usage.input_tokens * INPUT_TOKEN_COST
         output_cost = usage.output_tokens * OUTPUT_TOKEN_COST
         
-        return input_cost + output_cost
+        # Cache tokens (if present)
+        cache_creation_cost = getattr(usage, 'cache_creation_input_tokens', 0) * INPUT_TOKEN_COST
+        cache_read_cost = getattr(usage, 'cache_read_input_tokens', 0) * INPUT_TOKEN_COST * 0.1  # 90% discount
+    
+        return input_cost + output_cost + cache_creation_cost + cache_read_cost
